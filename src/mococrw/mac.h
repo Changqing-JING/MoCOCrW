@@ -84,7 +84,7 @@ public:
     /**
      * @brief destructor
      */
-    ~HMAC();
+    ~HMAC() noexcept override;
 
     /**
      * @brief Adds the chunk of data to the hash
@@ -117,14 +117,14 @@ public:
      * @brief The move constructor
      * @param other the other HMAC to be moved
      */
-    HMAC(HMAC &&other);
+    HMAC(HMAC &&other) noexcept;
 
     /**
      * @brief The assignment operator
      * @param other the other HMAC to be assigned
      * @return the result of the assignment
      */
-    HMAC &operator=(HMAC &&other);
+    HMAC &operator=(HMAC &&other) noexcept;
 
     /**
      * @brief Delete the copy constructor

@@ -36,14 +36,14 @@ class HMAC::Impl
 public:
     Impl(openssl::DigestTypes hashFunction, const std::vector<uint8_t> &key)
     {
-        const EVP_MD *digestFn = openssl::_getMDPtrFromDigestType(hashFunction);
-
         if (key.empty()) {
             throw MoCOCrWException("Key for HMAC is empty.");
         }
 
-        _ctx = openssl::_HMAC_CTX_new();
-        openssl::_HMAC_Init_ex(_ctx.get(), key, digestFn, NULL);
+        auto mac = openssl::_EVP_MAC_fetch(nullptr, OSSL_MAC_NAME_HMAC);
+        _ctx = openssl::_EVP_MAC_CTX_new(mac.get());
+        auto osslParams = openssl::_getOSSLParamFromDigestType(hashFunction);
+        openssl::_EVP_MAC_init(_ctx.get(), key, osslParams.data());
     }
 
     ~Impl() = default;
@@ -55,7 +55,7 @@ public:
         if (_isFinished) {
             throw MoCOCrWException("update() can't be called after finish()");
         }
-        openssl::_HMAC_Update(_ctx.get(), message);
+        openssl::_EVP_MAC_update(_ctx.get(), message);
     }
 
     std::vector<uint8_t> finish()
@@ -63,11 +63,8 @@ public:
         if (_isFinished) {
             throw MoCOCrWException("finish() can't be called twice.");
         }
-
-        _result = openssl::_HMAC_Final(_ctx.get());
-
+        _result = openssl::_EVP_MAC_final(_ctx.get());
         _isFinished = true;
-
         return _result;
     }
 
@@ -89,7 +86,7 @@ public:
     }
 
 private:
-    openssl::SSL_HMAC_CTX_Ptr _ctx = nullptr;
+    openssl::EVP_MAC_CTX_Ptr _ctx = nullptr;
     bool _isFinished = false;
     std::vector<uint8_t> _result;
 };
@@ -99,11 +96,11 @@ HMAC::HMAC(mococrw::openssl::DigestTypes hashFunction, const std::vector<uint8_t
     _impl = std::make_unique<HMAC::Impl>(hashFunction, key);
 }
 
-HMAC::~HMAC() = default;
+HMAC::~HMAC() noexcept = default;
 
-HMAC::HMAC(HMAC &&other) = default;
+HMAC::HMAC(HMAC &&other) noexcept = default;
 
-HMAC &HMAC::operator=(HMAC &&other) = default;
+HMAC &HMAC::operator=(HMAC &&other) noexcept = default;
 
 void HMAC::update(const std::vector<uint8_t> &message) { _impl->update(message); }
 

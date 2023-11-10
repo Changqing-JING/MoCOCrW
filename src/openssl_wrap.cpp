@@ -25,6 +25,7 @@
  *
  */
 
+#include <openssl/types.h>
 #include <cassert>
 #include <cstddef> /* this has to come before cppc (bug in boost) */
 #include <exception>
@@ -33,6 +34,7 @@
 #include <cppc/checkcall.hpp>
 
 #include "mococrw/bio.h"
+#include "mococrw/openssl_lib.h"
 #include "mococrw/openssl_wrap.h"
 
 using namespace std::chrono_literals;
@@ -493,8 +495,46 @@ const EVP_MD *_getMDPtrFromDigestType(DigestTypes type)
         case DigestTypes::SHA3_512:
             return lib::OpenSSLLib::SSL_EVP_sha3_512();
         default:
-            throw std::runtime_error("Unknown digest type");
+            throw MoCOCrWException("Unknown digest type");
     }
+}
+
+std::array<OSSL_PARAM, 2> _getOSSLParamFromDigestType(DigestTypes type)
+{
+   const char* digestName = nullptr;
+    switch (type) {
+        case DigestTypes::SHA1:
+            digestName = OSSL_DIGEST_NAME_SHA1;
+            break;
+        case DigestTypes::SHA256:
+            digestName = OSSL_DIGEST_NAME_SHA2_256;
+            break;
+        case DigestTypes::SHA384:
+            digestName = OSSL_DIGEST_NAME_SHA2_384;
+            break;
+        case DigestTypes::SHA512:
+            digestName = OSSL_DIGEST_NAME_SHA2_512;
+            break;
+        case DigestTypes::SHA3_256:
+            digestName = OSSL_DIGEST_NAME_SHA3_256;
+            break;
+        case DigestTypes::SHA3_384:
+            digestName = OSSL_DIGEST_NAME_SHA3_384;
+            break;
+        case DigestTypes::SHA3_512:
+            digestName = OSSL_DIGEST_NAME_SHA3_512;
+            break;
+        default:
+            throw MoCOCrWException("Unknown digest type");
+    }
+
+    OSSL_PARAM params[2];
+    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from C++17).
+    // The object is writable so this cont cast won't cause any issues.
+    params[0] = _OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, const_cast<char*>(digestName), 0);
+    params[1] = _OSSL_PARAM_construct_end();
+
+    return {{params[0], params[1]}};
 }
 
 void _EVP_DigestSignInit(EVP_MD_CTX *ctx, DigestTypes type, EVP_PKEY *pkey)
@@ -661,9 +701,9 @@ X509_CRL *createOpenSSLObject<X509_CRL>()
 }
 
 template <>
-HMAC_CTX *createOpenSSLObject<HMAC_CTX>()
+EVP_MAC_CTX *createOpenSSLObject<EVP_MAC_CTX>(EVP_MAC *mac)
 {
-    return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_HMAC_CTX_new);
+    return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_CTX_new, mac);
 }
 
 template <>
@@ -1440,31 +1480,38 @@ void _ECDH_KDF_X9_63(std::vector<uint8_t> &out,
                                   md);
 }
 
-void _HMAC_Init_ex(HMAC_CTX *ctx, const std::vector<uint8_t> &key, const EVP_MD *md, ENGINE *impl)
+void _EVP_MAC_init(EVP_MAC_CTX *ctx, const std::vector<uint8_t> &key, const OSSL_PARAM params[])
 {
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_HMAC_Init_ex,
+    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_init,
                                   ctx,
-                                  reinterpret_cast<const void *>(key.data()),
+                                  key.data(),
                                   key.size(),
-                                  md,
-                                  impl);
+                                  params);
 }
 
-std::vector<uint8_t> _HMAC_Final(HMAC_CTX *ctx)
+std::vector<uint8_t> _EVP_MAC_final(EVP_MAC_CTX *ctx)
 {
-    unsigned int length = EVP_MAX_MD_SIZE;
-    std::vector<uint8_t> md(length);
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_HMAC_Final, ctx, md.data(), &length);
-    md.resize(length);
-    return md;
+    size_t outlen = 0;
+    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_final, ctx, nullptr, &outlen, 0);
+    std::vector<uint8_t> out(outlen);
+    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_final, ctx, out.data(), &outlen, outlen);
+    return out;
 }
 
-void _HMAC_Update(HMAC_CTX *ctx, const std::vector<uint8_t> &data)
+void _EVP_MAC_update(EVP_MAC_CTX *ctx, const std::vector<uint8_t> &data)
 {
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_HMAC_Update, ctx, data.data(), data.size());
+    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_update, ctx, data.data(), data.size());
 }
 
-SSL_HMAC_CTX_Ptr _HMAC_CTX_new() { return createManagedOpenSSLObject<SSL_HMAC_CTX_Ptr>(); }
+EVP_MAC_CTX_Ptr _EVP_MAC_CTX_new(EVP_MAC *mac)
+{
+    return createManagedOpenSSLObject<EVP_MAC_CTX_Ptr, EVP_MAC*>(mac);
+}
+
+EVP_MAC_Ptr _EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const std::string &algorithm) {
+    return EVP_MAC_Ptr{OpensslCallPtr::callChecked(
+            lib::OpenSSLLib::SSL_EVP_MAC_fetch, libctx, algorithm.c_str(), nullptr)};
+}
 
 SSL_CMAC_CTX_Ptr _CMAC_CTX_new(void) { return createManagedOpenSSLObject<SSL_CMAC_CTX_Ptr>(); }
 
@@ -1648,5 +1695,12 @@ int _EVP_PKEY_bits(EVP_PKEY *pkey)
 
 void _OPENSSL_cleanse(void *ptr, size_t size) { lib::OpenSSLLib::SSL_OPENSSL_cleanse(ptr, size); }
 
+OSSL_PARAM _OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize) {
+    return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(key, buf, bsize);
+};
+
+OSSL_PARAM _OSSL_PARAM_construct_end() {
+    return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end();
+}
 }  // namespace openssl
 }  // namespace mococrw

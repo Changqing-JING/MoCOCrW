@@ -24,6 +24,7 @@ extern "C" {
 #include <openssl/bn.h>
 #include <openssl/cmac.h>
 #include <openssl/conf.h>
+#include <openssl/core_names.h>
 #include <openssl/crypto.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
@@ -31,6 +32,7 @@ extern "C" {
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
+#include <openssl/params.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
@@ -59,6 +61,8 @@ namespace lib
 class OpenSSLLib
 {
 public:
+    static OSSL_PARAM SSL_OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize) noexcept;
+    static OSSL_PARAM SSL_OSSL_PARAM_construct_end() noexcept;
     static void SSL_OPENSSL_cleanse(void *ptr, size_t len) noexcept;
     static int SSL_EVP_PKEY_bits(EVP_PKEY *pkey) noexcept;
     static const char *SSL_EC_curve_nid2nist(int nid) noexcept;
@@ -436,13 +440,20 @@ public:
                                   size_t sinfolen,
                                   const EVP_MD *md) noexcept;
 
-    /* HMAC */
-    static void SSL_HMAC_CTX_free(HMAC_CTX *ctx) noexcept;
-    static HMAC_CTX *SSL_HMAC_CTX_new() noexcept;
-    static int SSL_HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len) noexcept;
-    static int SSL_HMAC_Update(HMAC_CTX *ctx, const unsigned char *data, int len) noexcept;
-    static int SSL_HMAC_Init_ex(
-            HMAC_CTX *ctx, const void *key, int key_len, const EVP_MD *md, ENGINE *impl) noexcept;
+    /* MAC */
+    static void SSL_EVP_MAC_CTX_free(EVP_MAC_CTX *ctx) noexcept;
+    static EVP_MAC_CTX *SSL_EVP_MAC_CTX_new(EVP_MAC *mac) noexcept;
+    static int SSL_EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize) noexcept;
+    static int SSL_EVP_MAC_update(EVP_MAC_CTX *ctx, const unsigned char *data, int datalen) noexcept;
+    static int SSL_EVP_MAC_init(EVP_MAC_CTX *ctx,
+                            const unsigned char *key,
+                            int keylen,
+                            const OSSL_PARAM params[]) noexcept;
+    static EVP_MAC *SSL_EVP_MAC_fetch(OSSL_LIB_CTX *libctx,
+                                  const char *algorithm,
+                                  const char *properties) noexcept;
+
+    static void SSL_EVP_MAC_free(EVP_MAC *mac) noexcept;
 
     /* CMAC */
     static CMAC_CTX *SSL_CMAC_CTX_new() noexcept;
