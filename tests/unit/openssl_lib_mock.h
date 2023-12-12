@@ -416,21 +416,6 @@ public:
                                       const EVP_MD *digest,
                                       int keylen,
                                       unsigned char *out) = 0;
-
-    /* CMAC */
-    virtual CMAC_CTX *SSL_CMAC_CTX_new() = 0;
-    virtual void SSL_CMAC_CTX_cleanup(CMAC_CTX *ctx) = 0;
-    virtual void SSL_CMAC_CTX_free(CMAC_CTX *ctx) = 0;
-    virtual EVP_CIPHER_CTX *SSL_CMAC_CTX_get0_cipher_ctx(CMAC_CTX *ctx) = 0;
-    virtual int SSL_CMAC_CTX_copy(CMAC_CTX *out, const CMAC_CTX *in) = 0;
-    virtual int SSL_CMAC_Init(CMAC_CTX *ctx,
-                              const void *key,
-                              size_t keylen,
-                              const EVP_CIPHER *cipher,
-                              ENGINE *impl) = 0;
-    virtual int SSL_CMAC_Update(CMAC_CTX *ctx, const void *data, size_t dlen) = 0;
-    virtual int SSL_CMAC_Final(CMAC_CTX *ctx, unsigned char *out, size_t *poutlen) = 0;
-    virtual int SSL_CMAC_resume(CMAC_CTX *ctx) = 0;
 };
 
 /**
@@ -754,18 +739,6 @@ public:
                      const unsigned char *sinfo,
                      size_t sinfolen,
                      const EVP_MD *md));
-
-    /* CMAC */
-    MOCK_METHOD0(SSL_CMAC_CTX_new, CMAC_CTX *());
-    MOCK_METHOD1(SSL_CMAC_CTX_cleanup, void(CMAC_CTX *));
-    MOCK_METHOD1(SSL_CMAC_CTX_free, void(CMAC_CTX *));
-    MOCK_METHOD1(SSL_CMAC_CTX_get0_cipher_ctx, EVP_CIPHER_CTX *(CMAC_CTX *));
-    MOCK_METHOD2(SSL_CMAC_CTX_copy, int(CMAC_CTX *, const CMAC_CTX *));
-    MOCK_METHOD5(SSL_CMAC_Init,
-                 int(CMAC_CTX *, const void *, size_t, const EVP_CIPHER *, ENGINE *));
-    MOCK_METHOD3(SSL_CMAC_Update, int(CMAC_CTX *, const void *, size_t));
-    MOCK_METHOD3(SSL_CMAC_Final, int(CMAC_CTX *, unsigned char *, size_t *));
-    MOCK_METHOD1(SSL_CMAC_resume, int(CMAC_CTX *));
 };
 
 /**

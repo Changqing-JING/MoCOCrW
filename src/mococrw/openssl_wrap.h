@@ -168,17 +168,12 @@ using SSL_PKCS8_PRIV_KEY_INFO_Ptr = std::unique_ptr<
 using SSL_PKCS8_PRIV_KEY_INFO_SharedPtr =
         utility::SharedPtrTypeFromUniquePtr<SSL_PKCS8_PRIV_KEY_INFO_Ptr>;
 
-
 using EVP_MAC_CTX_Ptr =
         std::unique_ptr<EVP_MAC_CTX, SSLDeleter<EVP_MAC_CTX, lib::OpenSSLLib::SSL_EVP_MAC_CTX_free>>;
 using EVP_MAC_CTX_SharedPtr = utility::SharedPtrTypeFromUniquePtr<EVP_MAC_CTX_Ptr>;
 
 using EVP_MAC_Ptr = std::unique_ptr<EVP_MAC, SSLDeleter<EVP_MAC, lib::OpenSSLLib::SSL_EVP_MAC_free>>;
 using EVP_MAC_SharedPtr = utility::SharedPtrTypeFromUniquePtr<EVP_MAC_Ptr>;
-
-using SSL_CMAC_CTX_Ptr =
-        std::unique_ptr<CMAC_CTX, SSLDeleter<CMAC_CTX, lib::OpenSSLLib::SSL_CMAC_CTX_free>>;
-using SSL_CMAC_CTX_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_CMAC_CTX_Ptr>;
 
 using SSL_X509_REQ_Ptr =
         std::unique_ptr<X509_REQ, SSLDeleter<X509_REQ, lib::OpenSSLLib::SSL_X509_REQ_free>>;
@@ -1500,14 +1495,8 @@ void _EVP_MAC_update(EVP_MAC_CTX *ctx, const std::vector<uint8_t> &data);
 EVP_MAC_CTX_Ptr _EVP_MAC_CTX_new(EVP_MAC *mac);
 EVP_MAC_Ptr _EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const std::string &algorithm);
 
-SSL_CMAC_CTX_Ptr _CMAC_CTX_new(void);
-void _CMAC_Init(CMAC_CTX *ctx,
-                const std::vector<uint8_t> &key,
-                const EVP_CIPHER *cipher,
-                ENGINE *impl);
-void _CMAC_Update(CMAC_CTX *ctx, const std::vector<uint8_t> &data);
-std::vector<uint8_t> _CMAC_Final(CMAC_CTX *ctx);
 const EVP_CIPHER *_getCipherPtrFromCmacCipherType(CmacCipherTypes cipherType);
+std::array<OSSL_PARAM, 2> _getOSSLParamFromCmacCipherType(CmacCipherTypes cipherType);
 
 SSL_EC_KEY_Ptr _EC_KEY_oct2key(int nid, const std::vector<uint8_t> &buf);
 void _EVP_PKEY_set1_EC_KEY(EVP_PKEY *pkey, EC_KEY *key);

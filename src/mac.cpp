@@ -115,19 +115,13 @@ class CMAC::Impl
 public:
     Impl(openssl::CmacCipherTypes cipherType, const std::vector<uint8_t> &key)
     {
-        const EVP_CIPHER *cipher = openssl::_getCipherPtrFromCmacCipherType(cipherType);
-
-        size_t expectedKeySize = openssl::_EVP_CIPHER_key_length(cipher);
-        if (key.size() != expectedKeySize) {
-            auto cipherName = openssl::_EVP_CIPHER_name(cipher);
-            auto formatter = boost::format(
-                    "Invalid key size for %s: Expected %d bytes but got key with %d bytes.");
-            formatter % cipherName % expectedKeySize % key.size();
-            throw MoCOCrWException(formatter.str());
+        if (key.empty()) {
+            throw MoCOCrWException("Key for CMAC is empty.");
         }
-
-        _ctx = openssl::_CMAC_CTX_new();
-        openssl::_CMAC_Init(_ctx.get(), key, cipher, nullptr);
+        auto mac = openssl::_EVP_MAC_fetch(nullptr, OSSL_MAC_NAME_CMAC);
+        _ctx = openssl::_EVP_MAC_CTX_new(mac.get());
+        auto params = openssl::_getOSSLParamFromCmacCipherType(cipherType);
+        openssl::_EVP_MAC_init(_ctx.get(), key, params.data());
     }
 
     ~Impl() = default;
@@ -139,7 +133,7 @@ public:
         if (_isFinished) {
             throw MoCOCrWException("update() can't be called after finish()");
         }
-        openssl::_CMAC_Update(_ctx.get(), message);
+        openssl::_EVP_MAC_update(_ctx.get(), message);
     }
 
     std::vector<uint8_t> finish()
@@ -148,7 +142,7 @@ public:
             throw MoCOCrWException("finish() can't be called twice.");
         }
 
-        _result = openssl::_CMAC_Final(_ctx.get());
+        _result = openssl::_EVP_MAC_final(_ctx.get());
 
         _isFinished = true;
 
@@ -173,7 +167,7 @@ public:
     }
 
 private:
-    openssl::SSL_CMAC_CTX_Ptr _ctx = nullptr;
+    openssl::EVP_MAC_CTX_Ptr _ctx = nullptr;
     bool _isFinished = false;
     std::vector<uint8_t> _result;
 };

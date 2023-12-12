@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mococrw/openssl_wrap.h"
 #include "util.cpp"
 
 #include "mococrw/mac.h"
@@ -32,7 +33,8 @@ TEST(CheckConstructor, FailsForInvalidKey)
     std::vector<uint8_t> invalidKey{1, 2, 3};
     auto someCipher = openssl::CmacCipherTypes::AES_CBC_256;
 
-    EXPECT_THROW(CMAC(someCipher, invalidKey), MoCOCrWException);
+    // OpenSSL detects invalid key length as of 3.0
+    EXPECT_THROW(CMAC(someCipher, invalidKey), openssl::OpenSSLException);
 }
 
 TEST(CheckConstructor, WorksWithValidCipherAndMatchingKey)

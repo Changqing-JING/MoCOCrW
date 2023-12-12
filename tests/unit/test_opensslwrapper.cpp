@@ -415,3 +415,11 @@ TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromDigestType)
     EXPECT_NO_THROW(_getOSSLParamFromDigestType(DigestTypes::SHA512));
 }
 
+TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromCmacCipherType)
+{
+    _OSSL_PARAM osslParam(OSSL_MAC_PARAM_CIPHER, const_cast<char*>("aes-128-cbc"), strlen("aes-128-cbc"));
+    EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_utf8_string(_, _, 0)).WillOnce(Return(osslParam));
+    _OSSL_PARAM emptyOsslParam;
+    EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_end()).WillOnce(Return(emptyOsslParam));
+    EXPECT_NO_THROW(_getOSSLParamFromCmacCipherType(CmacCipherTypes::AES_CBC_128));
+}

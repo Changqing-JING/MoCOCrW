@@ -707,12 +707,6 @@ EVP_MAC_CTX *createOpenSSLObject<EVP_MAC_CTX>(EVP_MAC *mac)
 }
 
 template <>
-CMAC_CTX *createOpenSSLObject<CMAC_CTX>()
-{
-    return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_CMAC_CTX_new);
-}
-
-template <>
 ECDSA_SIG *createOpenSSLObject<ECDSA_SIG>()
 {
     return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_ECDSA_SIG_new);
@@ -1512,33 +1506,6 @@ EVP_MAC_Ptr _EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const std::string &algorithm) {
     return EVP_MAC_Ptr{OpensslCallPtr::callChecked(
             lib::OpenSSLLib::SSL_EVP_MAC_fetch, libctx, algorithm.c_str(), nullptr)};
 }
-
-SSL_CMAC_CTX_Ptr _CMAC_CTX_new(void) { return createManagedOpenSSLObject<SSL_CMAC_CTX_Ptr>(); }
-
-void _CMAC_Init(CMAC_CTX *ctx,
-                const std::vector<uint8_t> &key,
-                const EVP_CIPHER *cipher,
-                ENGINE *impl)
-{
-    OpensslCallIsOne::callChecked(
-            lib::OpenSSLLib::SSL_CMAC_Init, ctx, key.data(), key.size(), cipher, impl);
-}
-
-void _CMAC_Update(CMAC_CTX *ctx, const std::vector<uint8_t> &data)
-{
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_CMAC_Update, ctx, data.data(), data.size());
-}
-
-std::vector<uint8_t> _CMAC_Final(CMAC_CTX *ctx)
-{
-    std::vector<uint8_t> cmac(EVP_MAX_BLOCK_LENGTH);
-    size_t length = 0;
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_CMAC_Final, ctx, cmac.data(), &length);
-    assert(length <= cmac.size());
-    cmac.resize(length);
-    return cmac;
-}
-
 const EVP_CIPHER *_getCipherPtrFromCmacCipherType(CmacCipherTypes cipherType)
 {
     switch (cipherType) {
@@ -1549,6 +1516,29 @@ const EVP_CIPHER *_getCipherPtrFromCmacCipherType(CmacCipherTypes cipherType)
         default:
             throw std::runtime_error("Unknown cipher type");
     }
+}
+
+std::array<OSSL_PARAM, 2> _getOSSLParamFromCmacCipherType(CmacCipherTypes cipherType)
+{
+    const char* cipher_name = nullptr;
+    switch (cipherType) {
+        case CmacCipherTypes::AES_CBC_128:
+            cipher_name = "aes-128-cbc";
+            break;
+        case CmacCipherTypes::AES_CBC_256:
+            cipher_name = "aes-256-cbc";
+            break;
+        default:
+            throw MoCOCrWException("Unknown cipher type");
+    }
+
+    OSSL_PARAM params[2];
+    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from C++17).
+    // The object is writable so this const cast won't case any issues.
+    params[0] = lib::OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER, const_cast<char*>(cipher_name), 0);
+    params[1] = lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end();
+
+    return {params[0], params[1]};
 }
 
 SSL_EC_KEY_Ptr _EC_KEY_oct2key(int nid, const std::vector<uint8_t> &buf)
