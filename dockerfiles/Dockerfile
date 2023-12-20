@@ -1,22 +1,39 @@
-FROM buildenv
+#
+# Base docker image
+#
+FROM ubuntu:jammy AS mococrw-base
+# Install MoCOCrW dependencies (except OpenSSL)
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+        ca-certificates \
+        clang \
+        clang-format-11 \
+        cmake \
+        g++ \
+        git \
+        googletest \
+        libgtest-dev \
+        libgmock-dev \
+        libboost-all-dev \
+        libssl-dev \
+        # For llvm-symbolizer (used by A/LSAN).
+        # In particular, LLVM's symboliser is needed to print clearer
+        # stack-traces for more accurate suppressions.
+        llvm \
+        make \
+        ninja-build \
+        pkg-config \
+        wget \
+        && rm -rf /var/lib/apt/lists/*
 
+#
+# HSM support docker image
+#
+FROM mococrw-base AS mococrw-hsm-support
 ARG LIBP11_URL=https://github.com/OpenSC/libp11/releases/download/libp11-0.4.12/libp11-0.4.12.tar.gz
 RUN mkdir /tmp/patches
 COPY hsm-patches/0001-Introduce-generic-keypair-generation-interface-and-e.patch \
-     dilithium-patches/0001-CMakeLists.txt-Add-BUILD_TESTING-compile-flag.patch     \
-     dilithium-patches/0002-CMakeLists.txt-Enable-parallel-test-execution.patch     \
-     dilithium-patches/0003-CMakeLists.txt-Enable-PIE-compilation-flag.patch        \
-     dilithium-patches/0004-CMakeLists.txt-Add-UBSAN-and-ASAN-build-types.patch     \
-     dilithium-patches/0005-CMakeLists.txt-Add-cmake-install-target.patch           \
-     dilithium-patches/0006-CMakelists.txt-Add-stack-protector-strong-flag.patch    \
-     dilithium-patches/0007-CMakeLists.txt-Change-target_compile_definition.patch   \
-     dilithium-patches/0008-Add-function-for-pub-key-extraction.patch               \
-     /tmp/patches/
-
-# Install:
-#  * MoCOCrW dependencies (except OpenSSL)
-#  * libp11
-#  * libdilithium
+     /tmp/patches
+# Install HSM support dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
     # for pkcs11-tool which we use to create keys in token
     opensc \
@@ -27,7 +44,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-rec
     # libp11 needs this
     libtool && \
     rm -rf /var/lib/apt/lists/* && \
-
     # Build libp11
     mkdir -p /tmp/libp11 && \
     cd /tmp/libp11 && \
@@ -42,9 +58,24 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-rec
     make check && \
     make install && \
     rm -rf /tmp/libp11 && \
+    rm -rf /tmp/patches
 
-    # Build libdilithium
-    mkdir /tmp/libdilithium && \
+#
+# Diltihium support docker image
+#
+FROM mococrw-base AS mococrw-dilithium-support
+RUN mkdir /tmp/patches
+COPY dilithium-patches/0001-CMakeLists.txt-Add-BUILD_TESTING-compile-flag.patch     \
+     dilithium-patches/0002-CMakeLists.txt-Enable-parallel-test-execution.patch     \
+     dilithium-patches/0003-CMakeLists.txt-Enable-PIE-compilation-flag.patch        \
+     dilithium-patches/0004-CMakeLists.txt-Add-UBSAN-and-ASAN-build-types.patch     \
+     dilithium-patches/0005-CMakeLists.txt-Add-cmake-install-target.patch           \
+     dilithium-patches/0006-CMakelists.txt-Add-stack-protector-strong-flag.patch    \
+     dilithium-patches/0007-CMakeLists.txt-Change-target_compile_definition.patch   \
+     dilithium-patches/0008-Add-function-for-pub-key-extraction.patch               \
+     /tmp/patches/
+
+RUN mkdir /tmp/libdilithium && \
     cd /tmp/libdilithium && \
     git clone https://github.com/pq-crystals/dilithium && \
     cd dilithium && \
