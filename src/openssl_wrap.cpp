@@ -501,7 +501,7 @@ const EVP_MD *_getMDPtrFromDigestType(DigestTypes type)
 
 std::array<OSSL_PARAM, 2> _getOSSLParamFromDigestType(DigestTypes type)
 {
-   const char* digestName = nullptr;
+    const char *digestName = nullptr;
     switch (type) {
         case DigestTypes::SHA1:
             digestName = OSSL_DIGEST_NAME_SHA1;
@@ -529,9 +529,10 @@ std::array<OSSL_PARAM, 2> _getOSSLParamFromDigestType(DigestTypes type)
     }
 
     OSSL_PARAM params[2];
-    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from C++17).
-    // The object is writable so this cont cast won't cause any issues.
-    params[0] = _OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, const_cast<char*>(digestName), 0);
+    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from
+    // C++17). The object is writable so this cont cast won't cause any issues.
+    params[0] = _OSSL_PARAM_construct_utf8_string(
+            OSSL_MAC_PARAM_DIGEST, const_cast<char *>(digestName), 0);
     params[1] = _OSSL_PARAM_construct_end();
 
     return {{params[0], params[1]}};
@@ -1476,11 +1477,8 @@ void _ECDH_KDF_X9_63(std::vector<uint8_t> &out,
 
 void _EVP_MAC_init(EVP_MAC_CTX *ctx, const std::vector<uint8_t> &key, const OSSL_PARAM params[])
 {
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_init,
-                                  ctx,
-                                  key.data(),
-                                  key.size(),
-                                  params);
+    OpensslCallIsOne::callChecked(
+            lib::OpenSSLLib::SSL_EVP_MAC_init, ctx, key.data(), key.size(), params);
 }
 
 std::vector<uint8_t> _EVP_MAC_final(EVP_MAC_CTX *ctx)
@@ -1488,21 +1486,24 @@ std::vector<uint8_t> _EVP_MAC_final(EVP_MAC_CTX *ctx)
     size_t outlen = 0;
     OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_final, ctx, nullptr, &outlen, 0);
     std::vector<uint8_t> out(outlen);
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_final, ctx, out.data(), &outlen, outlen);
+    OpensslCallIsOne::callChecked(
+            lib::OpenSSLLib::SSL_EVP_MAC_final, ctx, out.data(), &outlen, outlen);
     return out;
 }
 
 void _EVP_MAC_update(EVP_MAC_CTX *ctx, const std::vector<uint8_t> &data)
 {
-    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_EVP_MAC_update, ctx, data.data(), data.size());
+    OpensslCallIsOne::callChecked(
+            lib::OpenSSLLib::SSL_EVP_MAC_update, ctx, data.data(), data.size());
 }
 
 EVP_MAC_CTX_Ptr _EVP_MAC_CTX_new(EVP_MAC *mac)
 {
-    return createManagedOpenSSLObject<EVP_MAC_CTX_Ptr, EVP_MAC*>(mac);
+    return createManagedOpenSSLObject<EVP_MAC_CTX_Ptr, EVP_MAC *>(mac);
 }
 
-EVP_MAC_Ptr _EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const std::string &algorithm) {
+EVP_MAC_Ptr _EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const std::string &algorithm)
+{
     return EVP_MAC_Ptr{OpensslCallPtr::callChecked(
             lib::OpenSSLLib::SSL_EVP_MAC_fetch, libctx, algorithm.c_str(), nullptr)};
 }
@@ -1520,7 +1521,7 @@ const EVP_CIPHER *_getCipherPtrFromCmacCipherType(CmacCipherTypes cipherType)
 
 std::array<OSSL_PARAM, 2> _getOSSLParamFromCmacCipherType(CmacCipherTypes cipherType)
 {
-    const char* cipher_name = nullptr;
+    const char *cipher_name = nullptr;
     switch (cipherType) {
         case CmacCipherTypes::AES_CBC_128:
             cipher_name = "aes-128-cbc";
@@ -1533,9 +1534,10 @@ std::array<OSSL_PARAM, 2> _getOSSLParamFromCmacCipherType(CmacCipherTypes cipher
     }
 
     OSSL_PARAM params[2];
-    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from C++17).
-    // The object is writable so this const cast won't case any issues.
-    params[0] = lib::OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER, const_cast<char*>(cipher_name), 0);
+    // Params should be changeable but C++14 doesn't return non-const char* on data() (only from
+    // C++17). The object is writable so this const cast won't case any issues.
+    params[0] = lib::OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(
+            OSSL_MAC_PARAM_CIPHER, const_cast<char *>(cipher_name), 0);
     params[1] = lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end();
 
     return {params[0], params[1]};
@@ -1685,12 +1687,11 @@ int _EVP_PKEY_bits(EVP_PKEY *pkey)
 
 void _OPENSSL_cleanse(void *ptr, size_t size) { lib::OpenSSLLib::SSL_OPENSSL_cleanse(ptr, size); }
 
-OSSL_PARAM _OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize) {
+OSSL_PARAM _OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize)
+{
     return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(key, buf, bsize);
 };
 
-OSSL_PARAM _OSSL_PARAM_construct_end() {
-    return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end();
-}
+OSSL_PARAM _OSSL_PARAM_construct_end() { return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end(); }
 }  // namespace openssl
 }  // namespace mococrw

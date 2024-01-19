@@ -540,7 +540,7 @@ class KeyGenerationFromPointTests : public testing::TestWithParam<openssl::ellip
 {
 };
 INSTANTIATE_TEST_SUITE_P(keyGenFromPointTest,
-                        KeyGenerationFromPointTests,
-                        testing::ValuesIn(getEllipticCurveNids()));
+                         KeyGenerationFromPointTests,
+                         testing::ValuesIn(getEllipticCurveNids()));
 
 TEST_P(KeyGenerationFromPointTests, tests) { testKeyTransformation(GetParam()); }

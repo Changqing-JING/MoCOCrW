@@ -253,7 +253,8 @@ AsymmetricKeypair AsymmetricKeypair::generateKeyOnHSM(HSM &hsm,
         throw MoCOCrWException("Invalid keyID - key longer than 63 bytes");
     }
     try {
-        HsmKeyParameters parameters = HsmKeyParameters::Builder{}.setExtractable(params.cka_extractable).build();
+        HsmKeyParameters parameters =
+                HsmKeyParameters::Builder{}.setExtractable(params.cka_extractable).build();
         return AsymmetricKeypair{hsm.generateKey(spec, keyLabel, keyID, parameters)};
     } catch (const openssl::OpenSSLException &e) {
         throw MoCOCrWException(
@@ -310,7 +311,8 @@ AsymmetricKeypair AsymmetricKeypair::generateKeyOnHSM(HSM &hsm,
         throw MoCOCrWException("Invalid keyID - key longer than 63 bytes");
     }
     try {
-        HsmKeyParameters parameters = HsmKeyParameters::Builder{}.setExtractable(params.cka_extractable).build();
+        HsmKeyParameters parameters =
+                HsmKeyParameters::Builder{}.setExtractable(params.cka_extractable).build();
         return AsymmetricKeypair{hsm.generateKey(spec, keyLabel, keyID, parameters)};
     } catch (const openssl::OpenSSLException &e) {
         throw MoCOCrWException(

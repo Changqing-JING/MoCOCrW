@@ -131,8 +131,8 @@ class CalculateCmacValues : public testing::TestWithParam<Testdata>
 };
 
 INSTANTIATE_TEST_SUITE_P(cmac,
-                        CalculateCmacValues,
-                        testing::ValuesIn(prepareTestdataForCmacTests()));
+                         CalculateCmacValues,
+                         testing::ValuesIn(prepareTestdataForCmacTests()));
 
 TEST_P(CalculateCmacValues, returnsCorrectCmac)
 {

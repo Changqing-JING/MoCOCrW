@@ -1056,29 +1056,35 @@ EVP_MAC_CTX *OpenSSLLib::SSL_EVP_MAC_CTX_new(EVP_MAC *mac) noexcept
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_CTX_new(mac);
 }
 
-int OpenSSLLib::SSL_EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize) noexcept
+int OpenSSLLib::SSL_EVP_MAC_final(EVP_MAC_CTX *ctx,
+                                  unsigned char *out,
+                                  size_t *outl,
+                                  size_t outsize) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_final(ctx, out, outl, outsize);
 }
 
-int OpenSSLLib::SSL_EVP_MAC_update(EVP_MAC_CTX *ctx, const unsigned char *data, int datalen) noexcept
+int OpenSSLLib::SSL_EVP_MAC_update(EVP_MAC_CTX *ctx,
+                                   const unsigned char *data,
+                                   int datalen) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_update(ctx, data, datalen);
 }
 
 int OpenSSLLib::SSL_EVP_MAC_init(EVP_MAC_CTX *ctx,
-                             const unsigned char *key,
-                             int keylen,
-                             const OSSL_PARAM params[]) noexcept
+                                 const unsigned char *key,
+                                 int keylen,
+                                 const OSSL_PARAM params[]) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_init(ctx, key, keylen, params);
 }
 
 EVP_MAC *OpenSSLLib::SSL_EVP_MAC_fetch(OSSL_LIB_CTX *libctx,
-                                   const char *algorithm,
-                                   const char *properties) noexcept
+                                       const char *algorithm,
+                                       const char *properties) noexcept
 {
-    return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_fetch(libctx, algorithm, properties);
+    return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_fetch(
+            libctx, algorithm, properties);
 }
 
 void OpenSSLLib::SSL_EVP_MAC_free(EVP_MAC *mac) noexcept
@@ -1086,9 +1092,12 @@ void OpenSSLLib::SSL_EVP_MAC_free(EVP_MAC *mac) noexcept
     return OpenSSLLibMockManager::getMockInterface().SSL_EVP_MAC_free(mac);
 }
 
-OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize) noexcept
+OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(const char *key,
+                                                            char *buf,
+                                                            size_t bsize) noexcept
 {
-    return OpenSSLLibMockManager::getMockInterface().SSL_OSSL_PARAM_construct_utf8_string(key, buf, bsize);
+    return OpenSSLLibMockManager::getMockInterface().SSL_OSSL_PARAM_construct_utf8_string(
+            key, buf, bsize);
 }
 
 OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_end() noexcept

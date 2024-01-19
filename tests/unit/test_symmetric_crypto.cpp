@@ -127,8 +127,8 @@ static std::vector<SymmetricCipherReferenceTestData> prepareTestDataForReference
 }
 
 INSTANTIATE_TEST_SUITE_P(ReferenceDecryption,
-                        SymmetricCipherReferenceTest,
-                        testing::ValuesIn(prepareTestDataForReferenceDecryption()));
+                         SymmetricCipherReferenceTest,
+                         testing::ValuesIn(prepareTestDataForReferenceDecryption()));
 
 class SymmetricCipherTest : public SymmetricCipherBase,
                             public testing::TestWithParam<EncrytDecryptTestData>
@@ -258,16 +258,16 @@ static std::vector<EncrytDecryptTestData> prepareTestDataForMode(SymmetricCipher
 }
 
 INSTANTIATE_TEST_SUITE_P(GCM,
-                        SymmetricCipherTest,
-                        testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::GCM)));
+                         SymmetricCipherTest,
+                         testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::GCM)));
 
 INSTANTIATE_TEST_SUITE_P(CBC,
-                        SymmetricCipherTest,
-                        testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::CBC)));
+                         SymmetricCipherTest,
+                         testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::CBC)));
 
 INSTANTIATE_TEST_SUITE_P(CTR,
-                        SymmetricCipherTest,
-                        testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::CTR)));
+                         SymmetricCipherTest,
+                         testing::ValuesIn(prepareTestDataForMode(SymmetricCipherMode::CTR)));
 
 static const std::vector<SymmetricCipherMode> AllSupportedCipherModesToTest{
         SymmetricCipherMode::CBC, SymmetricCipherMode::GCM, SymmetricCipherMode::CTR};
@@ -322,8 +322,8 @@ TEST_P(SymmetricCipherWrongParametersTest, throwsIfBuilderDoesNotMatchMode)
 }
 
 INSTANTIATE_TEST_SUITE_P(AllModes,
-                        SymmetricCipherWrongParametersTest,
-                        testing::ValuesIn(AllSupportedCipherModesToTest));
+                         SymmetricCipherWrongParametersTest,
+                         testing::ValuesIn(AllSupportedCipherModesToTest));
 
 TEST_P(SymmetricCipherAdvancedTest, encryptMultipleChunksAndDecrypt)
 {
@@ -437,8 +437,8 @@ TEST_P(SymmetricCipherAdvancedTest, readDecryptedTextInChunks)
 }
 
 INSTANTIATE_TEST_SUITE_P(Chunks,
-                        SymmetricCipherAdvancedTest,
-                        testing::ValuesIn(AllSupportedCipherModesToTest));
+                         SymmetricCipherAdvancedTest,
+                         testing::ValuesIn(AllSupportedCipherModesToTest));
 
 class SymmetricAuthenticatedCipherTest : public SymmetricCipherBase, public testing::Test
 {

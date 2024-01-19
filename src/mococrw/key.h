@@ -356,12 +356,11 @@ public:
      * libp11 and HSM module implementation, we can't know exactly what went wrong. libp11 does log
      * some things to stderr, check if there's more context there
      */
-    [[deprecated]]
-    static AsymmetricKeypair generateKeyOnHSM(HSM &hsm,
-                                              const RSASpec &spec,
-                                              const std::string &keyLabel,
-                                              const std::vector<uint8_t> &keyID,
-                                              const HsmKeyParams &params);
+    [[deprecated]] static AsymmetricKeypair generateKeyOnHSM(HSM &hsm,
+                                                             const RSASpec &spec,
+                                                             const std::string &keyLabel,
+                                                             const std::vector<uint8_t> &keyID,
+                                                             const HsmKeyParams &params);
 
     /**
      * @brief Generates ECC keypair on HSM token according to the spec given.
@@ -418,12 +417,11 @@ public:
      * libp11 and HSM module implementation, we can't know exactly what went wrong. libp11 does log
      * some things to stderr, check if there's more context there
      */
-    [[deprecated]]
-    static AsymmetricKeypair generateKeyOnHSM(HSM &hsm,
-                                              const ECCSpec &spec,
-                                              const std::string &keyLabel,
-                                              const std::vector<uint8_t> &keyID,
-                                              const HsmKeyParams &params);
+    [[deprecated]] static AsymmetricKeypair generateKeyOnHSM(HSM &hsm,
+                                                             const ECCSpec &spec,
+                                                             const std::string &keyLabel,
+                                                             const std::vector<uint8_t> &keyID,
+                                                             const HsmKeyParams &params);
 #endif
 
 private:

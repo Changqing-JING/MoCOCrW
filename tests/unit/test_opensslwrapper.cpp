@@ -396,10 +396,12 @@ TEST_F(OpenSSLWrapperTest, testECSantaClausNid2Nist)
  * null-initialized OpenSSL data structure OSSL_PARAM. This is for now used
  * only here for tests. One should use OSSL_PARAM_* functions from OpenSSL.
  */
-class _OSSL_PARAM : public OSSL_PARAM {
+class _OSSL_PARAM : public OSSL_PARAM
+{
 public:
     _OSSL_PARAM() = default;
-    explicit _OSSL_PARAM(const char* key, void* data, size_t data_size) noexcept : OSSL_PARAM() {
+    explicit _OSSL_PARAM(const char *key, void *data, size_t data_size) noexcept : OSSL_PARAM()
+    {
         this->key = key;
         this->data = data;
         this->data_size = data_size;
@@ -408,7 +410,9 @@ public:
 
 TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromDigestType)
 {
-    _OSSL_PARAM osslParam(OSSL_MAC_PARAM_DIGEST, const_cast<char*>(OSSL_DIGEST_NAME_SHA2_512), strlen(OSSL_DIGEST_NAME_SHA2_512));
+    _OSSL_PARAM osslParam(OSSL_MAC_PARAM_DIGEST,
+                          const_cast<char *>(OSSL_DIGEST_NAME_SHA2_512),
+                          strlen(OSSL_DIGEST_NAME_SHA2_512));
     EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_utf8_string(_, _, 0)).WillOnce(Return(osslParam));
     _OSSL_PARAM emptyOsslParam;
     EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_end()).WillOnce(Return(emptyOsslParam));
@@ -417,7 +421,8 @@ TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromDigestType)
 
 TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromCmacCipherType)
 {
-    _OSSL_PARAM osslParam(OSSL_MAC_PARAM_CIPHER, const_cast<char*>("aes-128-cbc"), strlen("aes-128-cbc"));
+    _OSSL_PARAM osslParam(
+            OSSL_MAC_PARAM_CIPHER, const_cast<char *>("aes-128-cbc"), strlen("aes-128-cbc"));
     EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_utf8_string(_, _, 0)).WillOnce(Return(osslParam));
     _OSSL_PARAM emptyOsslParam;
     EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_end()).WillOnce(Return(emptyOsslParam));

@@ -343,8 +343,8 @@ TEST_P(AsymmetricEncryptionTest, testSuccessfulEncryption)
 }
 
 INSTANTIATE_TEST_SUITE_P(testSuccessfulEncryptionDecryption,
-                        AsymmetricEncryptionTest,
-                        testing::ValuesIn(AsymmetricEncryptionTest::nominalDataSet));
+                         AsymmetricEncryptionTest,
+                         testing::ValuesIn(AsymmetricEncryptionTest::nominalDataSet));
 
 /**
  * @brief Tests that decryption is unsuccessful if a wrong padding mode is used.

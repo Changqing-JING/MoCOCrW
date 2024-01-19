@@ -25,7 +25,6 @@ namespace mococrw
 class ECCSpec;
 class RSASpec;
 
-
 // Needed for old deprecated API
 struct HsmKeyParams
 {
@@ -232,8 +231,6 @@ protected:
                                           const std::string &keyLabel,
                                           const std::vector<uint8_t> &keyID,
                                           const HsmKeyParameters &params) override;
-
-
 
 private:
     /**

@@ -169,10 +169,12 @@ using SSL_PKCS8_PRIV_KEY_INFO_SharedPtr =
         utility::SharedPtrTypeFromUniquePtr<SSL_PKCS8_PRIV_KEY_INFO_Ptr>;
 
 using EVP_MAC_CTX_Ptr =
-        std::unique_ptr<EVP_MAC_CTX, SSLDeleter<EVP_MAC_CTX, lib::OpenSSLLib::SSL_EVP_MAC_CTX_free>>;
+        std::unique_ptr<EVP_MAC_CTX,
+                        SSLDeleter<EVP_MAC_CTX, lib::OpenSSLLib::SSL_EVP_MAC_CTX_free>>;
 using EVP_MAC_CTX_SharedPtr = utility::SharedPtrTypeFromUniquePtr<EVP_MAC_CTX_Ptr>;
 
-using EVP_MAC_Ptr = std::unique_ptr<EVP_MAC, SSLDeleter<EVP_MAC, lib::OpenSSLLib::SSL_EVP_MAC_free>>;
+using EVP_MAC_Ptr =
+        std::unique_ptr<EVP_MAC, SSLDeleter<EVP_MAC, lib::OpenSSLLib::SSL_EVP_MAC_free>>;
 using EVP_MAC_SharedPtr = utility::SharedPtrTypeFromUniquePtr<EVP_MAC_Ptr>;
 
 using SSL_X509_REQ_Ptr =

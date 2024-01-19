@@ -712,16 +712,16 @@ TEST_P(SignatureTest, testSuccessfullVerificationOfKnownValidSignature)
 }
 
 INSTANTIATE_TEST_SUITE_P(testSuccessfulSigningAndVerification,
-                        SignatureTest,
-                        testing::ValuesIn(SignatureTest::SignatureTestData));
+                         SignatureTest,
+                         testing::ValuesIn(SignatureTest::SignatureTestData));
 
 INSTANTIATE_TEST_SUITE_P(testUnsuccessfulSignatureAndVerificationWithModifiedSignature,
-                        SignatureTest,
-                        testing::ValuesIn(SignatureTest::SignatureTestData));
+                         SignatureTest,
+                         testing::ValuesIn(SignatureTest::SignatureTestData));
 
 INSTANTIATE_TEST_SUITE_P(testSuccessfullVerificationOfKnownValidSignature,
-                        SignatureTest,
-                        testing::ValuesIn(SignatureTest::SignatureTestData));
+                         SignatureTest,
+                         testing::ValuesIn(SignatureTest::SignatureTestData));
 
 /**
  * @brief Tests whether the RSA signature context is creating the same PKCS1 signature

@@ -793,7 +793,7 @@ int OpenSSLLib::SSL_EVP_PKEY_CTX_set_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD
     return EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, md);
 }
 
-const EC_KEY *OpenSSLLib::SSL_EVP_PKEY_get0_EC_KEY(EVP_PKEY* pkey) noexcept
+const EC_KEY *OpenSSLLib::SSL_EVP_PKEY_get0_EC_KEY(EVP_PKEY *pkey) noexcept
 {
     return EVP_PKEY_get0_EC_KEY(pkey);
 }
@@ -919,7 +919,9 @@ int OpenSSLLib::SSL_ECDH_KDF_X9_63(unsigned char *out,
     return ECDH_KDF_X9_62(out, outlen, Z, Zlen, sinfo, sinfolen, md);
 }
 
-OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t bsize) noexcept
+OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_utf8_string(const char *key,
+                                                            char *buf,
+                                                            size_t bsize) noexcept
 {
     return OSSL_PARAM_construct_utf8_string(key, buf, bsize);
 }
@@ -929,41 +931,41 @@ OSSL_PARAM OpenSSLLib::SSL_OSSL_PARAM_construct_end() noexcept
     return OSSL_PARAM_construct_end();
 }
 
-int OpenSSLLib::SSL_EVP_MAC_init(EVP_MAC_CTX *ctx, const unsigned char *key, int keylen, const OSSL_PARAM *params) noexcept
+int OpenSSLLib::SSL_EVP_MAC_init(EVP_MAC_CTX *ctx,
+                                 const unsigned char *key,
+                                 int keylen,
+                                 const OSSL_PARAM *params) noexcept
 {
     return EVP_MAC_init(ctx, key, keylen, params);
 }
 
-int OpenSSLLib::SSL_EVP_MAC_update(EVP_MAC_CTX *ctx, const unsigned char *data, int datalen) noexcept
+int OpenSSLLib::SSL_EVP_MAC_update(EVP_MAC_CTX *ctx,
+                                   const unsigned char *data,
+                                   int datalen) noexcept
 {
     return EVP_MAC_update(ctx, data, datalen);
 }
 
-int OpenSSLLib::SSL_EVP_MAC_final(EVP_MAC_CTX *ctx, unsigned char *out, size_t *outl, size_t outsize) noexcept
+int OpenSSLLib::SSL_EVP_MAC_final(EVP_MAC_CTX *ctx,
+                                  unsigned char *out,
+                                  size_t *outl,
+                                  size_t outsize) noexcept
 {
     return EVP_MAC_final(ctx, out, outl, outsize);
 }
 
-EVP_MAC_CTX *OpenSSLLib::SSL_EVP_MAC_CTX_new(EVP_MAC *mac) noexcept
-{
-    return EVP_MAC_CTX_new(mac);
-}
+EVP_MAC_CTX *OpenSSLLib::SSL_EVP_MAC_CTX_new(EVP_MAC *mac) noexcept { return EVP_MAC_CTX_new(mac); }
 
-void OpenSSLLib::SSL_EVP_MAC_CTX_free(EVP_MAC_CTX *ctx) noexcept
-{
-    EVP_MAC_CTX_free(ctx);
-}
+void OpenSSLLib::SSL_EVP_MAC_CTX_free(EVP_MAC_CTX *ctx) noexcept { EVP_MAC_CTX_free(ctx); }
 
-EVP_MAC *OpenSSLLib::SSL_EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const char *algorithm, const char *properties) noexcept
+EVP_MAC *OpenSSLLib::SSL_EVP_MAC_fetch(OSSL_LIB_CTX *libctx,
+                                       const char *algorithm,
+                                       const char *properties) noexcept
 {
     return EVP_MAC_fetch(libctx, algorithm, properties);
 }
 
-void OpenSSLLib::SSL_EVP_MAC_free(EVP_MAC *mac) noexcept
-{
-    EVP_MAC_free(mac);
-}
-
+void OpenSSLLib::SSL_EVP_MAC_free(EVP_MAC *mac) noexcept { EVP_MAC_free(mac); }
 
 int OpenSSLLib::SSL_EC_KEY_oct2key(EC_KEY *eckey, const unsigned char *buf, size_t len) noexcept
 {
