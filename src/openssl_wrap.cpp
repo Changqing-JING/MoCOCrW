@@ -725,6 +725,25 @@ void addObjectToStack<STACK_OF(X509_CRL), X509_CRL>(STACK_OF(X509_CRL) * stack, 
     OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_sk_X509_CRL_push, stack, obj);
 }
 
+template <>
+int sizeOfStack<STACK_OF(X509)>(STACK_OF(X509) * stack)
+{
+    return OpensslCallIsNonNegative::callChecked(lib::OpenSSLLib::SSL_sk_X509_num, stack);
+}
+
+template <>
+SSL_X509_Ptr shiftFromStack<STACK_OF(X509), SSL_X509_Ptr>(STACK_OF(X509) * stack)
+{
+    return SSL_X509_Ptr{OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_sk_X509_shift, stack)};
+}
+
+template <>
+SSL_X509_Ptr getValueFromStack<STACK_OF(X509), SSL_X509_Ptr>(STACK_OF(X509) * stack, int idx)
+{
+    return SSL_X509_Ptr{
+            OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_sk_X509_value, stack, idx)};
+}
+
 X509_NAME *_X509_get_subject_name(X509 *ptr)
 {
     return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_X509_get_subject_name, ptr);
@@ -1195,6 +1214,40 @@ SSL_X509_PUBKEY_Ptr _d2i_X509_PUBKEY(const unsigned char *pin, long length)
 {
     return SSL_X509_PUBKEY_Ptr{OpensslCallPtr::callChecked(
             lib::OpenSSLLib::SSL_d2i_X509_PUBKEY, nullptr, &pin, length)};
+}
+
+std::vector<uint8_t> _X509_digest(const X509 *x, DigestTypes digestType)
+{
+    const EVP_MD *type;
+    if (digestType != DigestTypes::NONE) {
+        type = _getMDPtrFromDigestType(digestType);
+    } else {
+        type = nullptr;
+    }
+
+    unsigned int outlen = 0;
+    std::vector<uint8_t> md(EVP_MAX_MD_SIZE);
+    OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_X509_digest, x, type, md.data(), &outlen);
+    md.resize(outlen);
+    return md;
+}
+
+std::vector<uint8_t> _X509_pubkey_digest(const X509 *x, DigestTypes digestType)
+{
+    const EVP_MD *type;
+    if (digestType != DigestTypes::NONE) {
+        type = _getMDPtrFromDigestType(digestType);
+    } else {
+        type = nullptr;
+    }
+
+    unsigned int outlen = 0;
+    std::vector<uint8_t> md(EVP_MAX_MD_SIZE);
+    OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_X509_pubkey_digest, x, type, md.data(), &outlen);
+    md.resize(outlen);
+    return md;
 }
 
 SSL_X509_CRL_Ptr _PEM_read_bio_X509_CRL(BIO *bp)
@@ -1693,5 +1746,83 @@ OSSL_PARAM _OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t 
 };
 
 OSSL_PARAM _OSSL_PARAM_construct_end() { return lib::OpenSSLLib::SSL_OSSL_PARAM_construct_end(); }
+
+SSL_PKCS12_Ptr _PKCS12_create(const std::string &pwd,
+                              const std::string &name,
+                              EVP_PKEY *pkey,
+                              X509 *cert,
+                              STACK_OF(X509) * ca,
+                              const int nid_key,
+                              const int nid_cert,
+                              const int iter,
+                              const int mac_iter,
+                              const int keytype)
+{
+    return SSL_PKCS12_Ptr{OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_PKCS12_create,
+                                                      pwd.c_str(),
+                                                      name.c_str(),
+                                                      pkey,
+                                                      cert,
+                                                      ca,
+                                                      nid_key,
+                                                      nid_cert,
+                                                      iter,
+                                                      mac_iter,
+                                                      keytype)};
+}
+
+SSL_EVP_PKEY_Ptr _parsePrivateKeyFromPkcs12(PKCS12 *p12, const std::string &pwd)
+{
+    EVP_PKEY *pkey = nullptr;
+    OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_PKCS12_parse, p12, pwd.c_str(), &pkey, nullptr, nullptr);
+
+    if (pkey == nullptr) {
+        throw OpenSSLException("Cannot parse private key from pkcs12 container. Not available");
+    }
+
+    return SSL_EVP_PKEY_Ptr{pkey};
+}
+
+SSL_X509_Ptr _parseCertificateFromPkcs12(PKCS12 *p12, const std::string &pwd)
+{
+    // OpenSSL requires pkey placeholder even though it is discarded and not returned.
+    EVP_PKEY *pkey = nullptr;
+    X509 *cert = nullptr;
+    OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_PKCS12_parse, p12, pwd.c_str(), &pkey, &cert, nullptr);
+
+    if (cert == nullptr) {
+        throw OpenSSLException("Cannot parse certificate from pkcs12 container. Not available");
+    }
+
+    return SSL_X509_Ptr{cert};
+}
+
+SSL_STACK_OWNER_X509_Ptr _parseAdditionalCertsFromPkcs12(PKCS12 *p12, const std::string &pwd)
+{
+    // OpenSSL requires pkey & cert placeholders even though they are discarded and not returned.
+    // If they are left NULL, then the private key's cert will be included in additionalCerts.
+
+    EVP_PKEY *pkey = nullptr;
+    X509 *cert = nullptr;
+    // Initialise empty stack:
+    auto additionalCerts = createOpenSSLObject<STACK_OF(X509)>();
+    OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_PKCS12_parse, p12, pwd.c_str(), &pkey, &cert, &additionalCerts);
+
+    return SSL_STACK_OWNER_X509_Ptr{additionalCerts};
+}
+
+SSL_PKCS12_Ptr _d2i_PKCS12_bio(BIO *bp)
+{
+    return SSL_PKCS12_Ptr{
+            OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_d2i_PKCS12_bio, bp, nullptr)};
+}
+
+void _i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12)
+{
+    OpensslCallIsNonNegative::callChecked(lib::OpenSSLLib::SSL_i2d_PKCS12_bio, bp, pkcs12);
+}
 }  // namespace openssl
 }  // namespace mococrw

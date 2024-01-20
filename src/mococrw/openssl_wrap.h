@@ -215,6 +215,11 @@ using SSL_STACK_X509_Ptr =
                         SSLDeleter<STACK_OF(X509), lib::OpenSSLLib::SSL_sk_X509_free>>;
 using SSL_STACK_X509_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_STACK_X509_Ptr>;
 
+using SSL_STACK_OWNER_X509_Ptr =
+        std::unique_ptr<STACK_OF(X509),
+                        SSLDeleter<STACK_OF(X509), lib::OpenSSLLib::SSL_sk_X509_pop_free>>;
+using SSL_STACK_OWNER_X509_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_STACK_X509_Ptr>;
+
 using SSL_ASN1_TIME_Ptr =
         std::unique_ptr<ASN1_TIME, SSLDeleter<ASN1_TIME, lib::OpenSSLLib::SSL_ASN1_TIME_free>>;
 using SSL_ASN1_TIME_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_ASN1_TIME_Ptr>;
@@ -255,6 +260,10 @@ using time_point = std::chrono::system_clock::time_point;
 using SSL_ENGINE_Ptr =
         std::unique_ptr<ENGINE, SSLRetDeleter<int, ENGINE, lib::OpenSSLLib::SSL_ENGINE_free>>;
 using SSL_ENGINE_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_ENGINE_Ptr>;
+
+using SSL_PKCS12_Ptr =
+        std::unique_ptr<PKCS12, SSLDeleter<PKCS12, lib::OpenSSLLib::SSL_PKCS12_free>>;
+using SSL_PKCS12_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_PKCS12_Ptr>;
 
 /* Below are is the "wrapped" OpenSSL library. By convetion, all functions start with an
  * underscore to visually distinguish them from the methods of the class OpenSSLLib and
@@ -849,6 +858,21 @@ SSLSmartPtrType createManagedOpenSSLObject(Types... args)
 template <class StackType, class ObjType>
 void addObjectToStack(StackType *stack, const ObjType *obj);
 
+template <class StackType>
+int sizeOfStack(StackType *stack);
+
+/**
+ * This function returns and removes the first value in the stack.
+ */
+template <class StackType, class ObjType>
+ObjType shiftFromStack(StackType *stack);
+
+/**
+ * This function does not remove the returned value from the stack.
+ */
+template <class StackType, class ObjType>
+ObjType getValueFromStack(StackType *stack, int idx);
+
 /**
  * @result pointer to the internal X509_NAME structure.
  *
@@ -1239,6 +1263,10 @@ SSL_X509_CRL_Ptr _d2i_X509_CRL_bio(BIO *bp);
  * Reads a DER encoded x509 pubkey from a buffer.
  */
 SSL_X509_PUBKEY_Ptr _d2i_X509_PUBKEY(const unsigned char *pin, long length);
+
+std::vector<uint8_t> _X509_digest(const X509 *x, const DigestTypes digestType);
+
+std::vector<uint8_t> _X509_pubkey_digest(const X509 *x, const DigestTypes digestType);
 
 /**
  * Sets a list of CRLs for a verification context.
@@ -1636,5 +1664,27 @@ OSSL_PARAM _OSSL_PARAM_construct_utf8_string(const char *key, char *buf, size_t 
  */
 OSSL_PARAM _OSSL_PARAM_construct_end();
 
+/* PKCS12 */
+
+SSL_PKCS12_Ptr _PKCS12_create(const std::string &pwd,
+                              const std::string &name,
+                              EVP_PKEY *pkey,
+                              X509 *cert,
+                              STACK_OF(X509) * ca,
+                              const int nid_key,
+                              const int nid_cert,
+                              const int iter,
+                              const int mac_iter,
+                              const int keytype);
+
+SSL_EVP_PKEY_Ptr _parsePrivateKeyFromPkcs12(PKCS12 *p12, const std::string &pwd);
+
+SSL_X509_Ptr _parseCertificateFromPkcs12(PKCS12 *p12, const std::string &pwd);
+
+SSL_STACK_OWNER_X509_Ptr _parseAdditionalCertsFromPkcs12(PKCS12 *p12, const std::string &pwd);
+
+SSL_PKCS12_Ptr _d2i_PKCS12_bio(BIO *bp);
+
+void _i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12);
 }  // namespace openssl
 }  // namespace mococrw

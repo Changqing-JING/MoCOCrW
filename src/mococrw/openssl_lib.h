@@ -33,6 +33,7 @@ extern "C" {
 #include <openssl/objects.h>
 #include <openssl/params.h>
 #include <openssl/pem.h>
+#include <openssl/pkcs12.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
@@ -283,6 +284,14 @@ public:
                                             const unsigned char **ppin,
                                             long length) noexcept;
     static void SSL_X509_PUBKEY_free(X509_PUBKEY *a) noexcept;
+    static int SSL_X509_digest(const X509 *data,
+                               const EVP_MD *type,
+                               unsigned char *md,
+                               unsigned int *len) noexcept;
+    static int SSL_X509_pubkey_digest(const X509 *data,
+                                      const EVP_MD *type,
+                                      unsigned char *md,
+                                      unsigned int *len) noexcept;
 
     /* ASN1_TIME */
     static void SSL_ASN1_TIME_free(ASN1_TIME *x) noexcept;
@@ -358,6 +367,10 @@ public:
     /* stack of X509 */
     static STACK_OF(X509) * SSL_sk_X509_new_null() noexcept;
     static int SSL_sk_X509_push(STACK_OF(X509) * stack, const X509 *crt) noexcept;
+    static int SSL_sk_X509_num(STACK_OF(X509) * stack) noexcept;
+    static X509 *SSL_sk_X509_value(STACK_OF(X509) * stack, int idx) noexcept;
+    static X509 *SSL_sk_X509_shift(STACK_OF(X509) * stack) noexcept;
+    static void SSL_sk_X509_pop_free(STACK_OF(X509) * stack) noexcept;
     static void SSL_sk_X509_free(STACK_OF(X509) * stack) noexcept;
 
     /* EVP_MD */
@@ -476,6 +489,30 @@ public:
     static int SSL_EVP_PKEY_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen) noexcept;
     static int SSL_EVP_PKEY_derive_set_peer(EVP_PKEY_CTX *ctx, EVP_PKEY *peer) noexcept;
     static int SSL_EVP_PKEY_derive_init(EVP_PKEY_CTX *ctx) noexcept;
+
+    /* PKCS12 */
+    static PKCS12 *SSL_PKCS12_create(const char *pass,
+                                     const char *name,
+                                     EVP_PKEY *pkey,
+                                     X509 *cert,
+                                     STACK_OF(X509) * ca,
+                                     int nid_key,
+                                     int nid_cert,
+                                     int iter,
+                                     int mac_iter,
+                                     int keytype) noexcept;
+
+    static void SSL_PKCS12_free(PKCS12 *pkcs12) noexcept;
+
+    static int SSL_PKCS12_parse(PKCS12 *p12,
+                                const char *pass,
+                                EVP_PKEY **pkey,
+                                X509 **cert,
+                                STACK_OF(X509) * *ca) noexcept;
+
+    static int SSL_i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12) noexcept;
+
+    static PKCS12 *SSL_d2i_PKCS12_bio(BIO *bp, PKCS12 **pkcs12) noexcept;
 };
 }  // namespace lib
 }  // namespace openssl

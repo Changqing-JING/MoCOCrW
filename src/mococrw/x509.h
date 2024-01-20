@@ -119,6 +119,18 @@ public:
     AsymmetricPublicKey getPublicKey() const;
 
     /**
+     * Returns a digest (finger-print) of the Certificate.
+     * @return The digest as a raw byte vector
+     */
+    std::vector<uint8_t> getDigest(openssl::DigestTypes digestType) const;
+
+    /**
+     * Returns a digest of the DER representation of the Certificate's public key.
+     * @return The digest as a raw byte vector
+     */
+    std::vector<uint8_t> getPublicKeyDigest(openssl::DigestTypes digestType) const;
+
+    /**
      * @brief Verify if the certificate is a CA
      *
      * @return Whether the certificate is a CA or not

@@ -31,6 +31,7 @@ using namespace ::std::string_literals;
 
 using ::testing::_;
 using ::testing::AnyNumber;
+using ::testing::DoAll;
 using ::testing::Mock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
@@ -80,6 +81,27 @@ ENGINE *someEnginePtr()
     /* Reserve some memory and cast a pointer to that ; pointers will not be dereferenced */
     static char dummyBuf[42] = {};
     return reinterpret_cast<ENGINE *>(&dummyBuf);
+}
+
+STACK_OF(X509) * someX509StackPtr()
+{
+    /* Reserve some memory and cast a pointer to that ; pointers will not be dereferenced */
+    static char dummyBuf[42] = {};
+    return reinterpret_cast<STACK_OF(X509) *>(&dummyBuf);
+}
+
+X509 *someX509Ptr()
+{
+    /* Reserve some memory and cast a pointer to that ; pointers will not be dereferenced */
+    static char dummyBuf[42] = {};
+    return reinterpret_cast<X509 *>(&dummyBuf);
+}
+
+PKCS12 *somePkcs12Ptr()
+{
+    /* Reserve some memory and cast a pointer to that ; pointers will not be dereferenced */
+    static char dummyBuf[42] = {};
+    return reinterpret_cast<PKCS12 *>(&dummyBuf);
 }
 }  // namespace testutils
 
@@ -245,6 +267,22 @@ TEST_F(OpenSSLWrapperTest, testThatX509ParsingThrowsOnNullptr)
     EXPECT_CALL(_mock(), SSL_PEM_read_bio_X509(bio, nullptr, nullptr, nullptr))
             .WillOnce(Return(nullptr));
     EXPECT_THROW(_PEM_read_bio_X509(bio), OpenSSLException);
+}
+
+TEST_F(OpenSSLWrapperTest, testX509Digest)
+{
+    X509 *cert = nullptr;
+    EXPECT_CALL(_mock(), SSL_X509_digest(cert, lib::OpenSSLLib::SSL_EVP_sha512(), _, _))
+            .WillOnce(Return(1));
+    EXPECT_NO_THROW(_X509_digest(cert, DigestTypes::SHA512));
+}
+
+TEST_F(OpenSSLWrapperTest, testX509PubKeyDigest)
+{
+    X509 *cert = nullptr;
+    EXPECT_CALL(_mock(), SSL_X509_pubkey_digest(cert, lib::OpenSSLLib::SSL_EVP_sha512(), _, _))
+            .WillOnce(Return(1));
+    EXPECT_NO_THROW(_X509_pubkey_digest(cert, DigestTypes::SHA512));
 }
 
 TEST_F(OpenSSLWrapperTest, testEngineById)
@@ -427,4 +465,64 @@ TEST_F(OpenSSLWrapperTest, testGetOSSLParamFromCmacCipherType)
     _OSSL_PARAM emptyOsslParam;
     EXPECT_CALL(_mock(), SSL_OSSL_PARAM_construct_end()).WillOnce(Return(emptyOsslParam));
     EXPECT_NO_THROW(_getOSSLParamFromCmacCipherType(CmacCipherTypes::AES_CBC_128));
+}
+
+TEST_F(OpenSSLWrapperTest, testPkcs12Creation)
+{
+    auto pwd = std::string("password");
+    auto name = std::string("name");
+    X509 *cert = nullptr;
+    STACK_OF(X509) *ca = nullptr;
+    EXPECT_CALL(
+            _mock(),
+            SSL_PKCS12_create(
+                    pwd.c_str(), name.c_str(), ::testutils::somePkeyPtr(), cert, ca, 0, 0, 0, 0, 0))
+            .WillOnce(Return(::testutils::somePkcs12Ptr()));
+    EXPECT_NO_THROW(_PKCS12_create(pwd, name, ::testutils::somePkeyPtr(), cert, ca, 0, 0, 0, 0, 0));
+}
+
+TEST_F(OpenSSLWrapperTest, testPkcs12PrivateKeyParsing)
+{
+    auto pwd = std::string("password");
+    auto pkey = ::testutils::somePkeyPtr();
+
+    EXPECT_CALL(_mock(), SSL_PKCS12_parse(::testutils::somePkcs12Ptr(), pwd.c_str(), _, _, nullptr))
+            .WillOnce(DoAll(SetArgPointee<2>(pkey), Return(1)));
+    EXPECT_NO_THROW(_parsePrivateKeyFromPkcs12(::testutils::somePkcs12Ptr(), pwd));
+}
+
+TEST_F(OpenSSLWrapperTest, testPkcs12CertParsing)
+{
+    auto pwd = std::string("password");
+    auto cert = ::testutils::someX509Ptr();
+
+    EXPECT_CALL(_mock(), SSL_PKCS12_parse(::testutils::somePkcs12Ptr(), pwd.c_str(), _, _, nullptr))
+            .WillOnce(DoAll(SetArgPointee<3>(cert), Return(1)));
+    EXPECT_NO_THROW(_parseCertificateFromPkcs12(::testutils::somePkcs12Ptr(), pwd));
+}
+
+TEST_F(OpenSSLWrapperTest, testPkcs12AdditionalCertParsing)
+{
+    auto pwd = std::string("password");
+    auto stack = ::testutils::someX509StackPtr();
+
+    EXPECT_CALL(_mock(), SSL_sk_X509_new_null()).WillOnce(Return(stack));
+    EXPECT_CALL(_mock(), SSL_PKCS12_parse(::testutils::somePkcs12Ptr(), pwd.c_str(), _, _, _))
+            .WillOnce(DoAll(SetArgPointee<4>(stack), Return(1)));
+    EXPECT_NO_THROW(_parseAdditionalCertsFromPkcs12(::testutils::somePkcs12Ptr(), pwd));
+}
+
+TEST_F(OpenSSLWrapperTest, testPkcs12ToBio)
+{
+    BIO *bp = nullptr;
+    EXPECT_CALL(_mock(), SSL_i2d_PKCS12_bio(bp, ::testutils::somePkcs12Ptr())).WillOnce(Return(0));
+    EXPECT_NO_THROW(_i2d_PKCS12_bio(bp, ::testutils::somePkcs12Ptr()));
+}
+
+TEST_F(OpenSSLWrapperTest, testBioToPkcs12)
+{
+    BIO *bp = nullptr;
+    EXPECT_CALL(_mock(), SSL_d2i_PKCS12_bio(bp, nullptr))
+            .WillOnce(Return(::testutils::somePkcs12Ptr()));
+    EXPECT_NO_THROW(_d2i_PKCS12_bio(bp));
 }

@@ -33,6 +33,14 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
     add_executable(biotests test_bio.cpp ${REAL_SOURCES})
     add_executable(hashtests test_hash.cpp ${REAL_SOURCES})
     add_executable(utiltests test_util.cpp ${REAL_SOURCES})
+    add_executable(pkcs12tests test_pkcs12.cpp
+                            "${SRC_DIR}/key.cpp"
+                            "${SRC_DIR}/csr.cpp"
+                            "${SRC_DIR}/asn1time.cpp"
+                            "${SRC_DIR}/crl.cpp"
+                            "${SRC_DIR}/x509.cpp"
+                            "${SRC_DIR}/util.cpp"
+                             ${REAL_SOURCES})
     add_executable(x509tests test_x509.cpp
                             "${SRC_DIR}/key.cpp"
                             "${SRC_DIR}/csr.cpp"
@@ -167,6 +175,7 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
     target_link_libraries(biotests ${DEFAULT_LINK_LIBRARIES})
     target_link_libraries(hashtests ${DEFAULT_LINK_LIBRARIES})
     target_link_libraries(utiltests ${DEFAULT_LINK_LIBRARIES})
+    target_link_libraries(pkcs12tests ${DEFAULT_LINK_LIBRARIES})
     target_link_libraries(x509tests ${DEFAULT_LINK_LIBRARIES})
     target_link_libraries(crltests ${DEFAULT_LINK_LIBRARIES})
     target_link_libraries(verificationtests ${DEFAULT_LINK_LIBRARIES})
@@ -223,6 +232,11 @@ if(BUILD_TESTING) #set by Ctest. Also set in the integration build environment.
     add_test(
         NAME DistinguishedNameTests
         COMMAND dntests
+    )
+    add_test(
+        NAME Pkcs12Tests
+        COMMAND pkcs12tests
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test-certs"
     )
     add_test(
         NAME X509Tests

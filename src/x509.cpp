@@ -302,11 +302,17 @@ AsymmetricPublicKey X509Certificate::getPublicKey() const
     return AsymmetricPublicKey(std::move(pubkey));
 }
 
-bool X509Certificate::isCA() const
+std::vector<uint8_t> X509Certificate::getDigest(openssl::DigestTypes digestType) const
 {
-    return _X509_check_ca(_x509.get());
-    ;
+    return _X509_digest(internal(), digestType);
 }
+
+std::vector<uint8_t> X509Certificate::getPublicKeyDigest(openssl::DigestTypes digestType) const
+{
+    return _X509_pubkey_digest(internal(), digestType);
+}
+
+bool X509Certificate::isCA() const { return _X509_check_ca(_x509.get()); }
 
 std::chrono::system_clock::time_point X509Certificate::getNotBefore() const
 {

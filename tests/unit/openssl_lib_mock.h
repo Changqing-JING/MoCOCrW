@@ -108,6 +108,14 @@ public:
     virtual int SSL_i2d_X509_REQ_bio(BIO *bp, X509_REQ *req) = 0;
     virtual X509_REQ *SSL_d2i_X509_REQ_bio(BIO *bp, X509_REQ **req) = 0;
     virtual void SSL_X509_PUBKEY_free(X509_PUBKEY *a) = 0;
+    virtual int SSL_X509_digest(const X509 *data,
+                                const EVP_MD *type,
+                                unsigned char *md,
+                                unsigned int *len) = 0;
+    virtual int SSL_X509_pubkey_digest(const X509 *data,
+                                       const EVP_MD *type,
+                                       unsigned char *md,
+                                       unsigned int *len) = 0;
     virtual X509_PUBKEY *SSL_d2i_X509_PUBKEY(X509_PUBKEY **a,
                                              const unsigned char **ppin,
                                              long length) = 0;
@@ -371,6 +379,10 @@ public:
     /* stack of X509 */
     virtual STACK_OF(X509) * SSL_sk_X509_new_null() = 0;
     virtual int SSL_sk_X509_push(STACK_OF(X509) * stack, const X509 *crt) = 0;
+    virtual int SSL_sk_X509_num(STACK_OF(X509) * stack) = 0;
+    virtual X509 *SSL_sk_X509_value(STACK_OF(X509) * stack, int idx) = 0;
+    virtual X509 *SSL_sk_X509_shift(STACK_OF(X509) * stack) = 0;
+    virtual void SSL_sk_X509_pop_free(STACK_OF(X509) * stack) = 0;
     virtual void SSL_sk_X509_free(STACK_OF(X509) * stack) = 0;
 
     /* Signatures */
@@ -421,6 +433,22 @@ public:
                                       const EVP_MD *digest,
                                       int keylen,
                                       unsigned char *out) = 0;
+    /* PKCS12 */
+    virtual PKCS12 *SSL_PKCS12_create(const char *pass,
+                                      const char *name,
+                                      EVP_PKEY *pkey,
+                                      X509 *cert,
+                                      STACK_OF(X509) * ca,
+                                      int nid_key,
+                                      int nid_cert,
+                                      int iter,
+                                      int mac_iter,
+                                      int keytype) = 0;
+    virtual void SSL_PKCS12_free(PKCS12 *pkcs12) = 0;
+    virtual int SSL_PKCS12_parse(
+            PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert, STACK_OF(X509) * *ca) = 0;
+    virtual int SSL_i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12) = 0;
+    virtual PKCS12 *SSL_d2i_PKCS12_bio(BIO *bp, PKCS12 **pkcs12) = 0;
 };
 
 /**
@@ -481,6 +509,10 @@ public:
     MOCK_METHOD2(SSL_d2i_X509_REQ_bio, X509_REQ *(BIO *, X509_REQ **));
     MOCK_METHOD3(SSL_d2i_X509_PUBKEY, X509_PUBKEY *(X509_PUBKEY **, const unsigned char **, long));
     MOCK_METHOD1(SSL_X509_PUBKEY_free, void(X509_PUBKEY *));
+    MOCK_METHOD4(SSL_X509_digest,
+                 int(const X509 *, const EVP_MD *, unsigned char *, unsigned int *));
+    MOCK_METHOD4(SSL_X509_pubkey_digest,
+                 int(const X509 *, const EVP_MD *, unsigned char *, unsigned int *));
     MOCK_METHOD2(SSL_EVP_CIPHER_CTX_set_padding, int(EVP_CIPHER_CTX *, int));
     MOCK_METHOD1(SSL_EVP_CIPHER_CTX_reset, int(EVP_CIPHER_CTX *));
     MOCK_METHOD2(SSL_RAND_bytes, int(unsigned char *, int));
@@ -691,6 +723,10 @@ public:
 
     MOCK_METHOD0(SSL_sk_X509_new_null, STACK_OF(X509) * ());
     MOCK_METHOD2(SSL_sk_X509_push, int(STACK_OF(X509) *, const X509 *));
+    MOCK_METHOD1(SSL_sk_X509_num, int(STACK_OF(X509) *));
+    MOCK_METHOD2(SSL_sk_X509_value, X509 *(STACK_OF(X509) *, int));
+    MOCK_METHOD1(SSL_sk_X509_shift, X509 *(STACK_OF(X509) *));
+    MOCK_METHOD1(SSL_sk_X509_pop_free, void(STACK_OF(X509) *));
     MOCK_METHOD1(SSL_sk_X509_free, void(STACK_OF(X509) *));
 
     MOCK_METHOD3(SSL_X509_NAME_get_index_by_NID, int(X509_NAME *, int, int));
@@ -745,6 +781,24 @@ public:
                      const unsigned char *sinfo,
                      size_t sinfolen,
                      const EVP_MD *md));
+
+    MOCK_METHOD10(SSL_PKCS12_create,
+                  PKCS12 *(const char *pass,
+                           const char *name,
+                           EVP_PKEY *pkey,
+                           X509 *cert,
+                           STACK_OF(X509) * ca,
+                           int nid_key,
+                           int nid_cert,
+                           int iter,
+                           int mac_iter,
+                           int keytype));
+    MOCK_METHOD5(
+            SSL_PKCS12_parse,
+            int(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert, STACK_OF(X509) * *ca));
+    MOCK_METHOD1(SSL_PKCS12_free, void(PKCS12 *pkcs12));
+    MOCK_METHOD2(SSL_i2d_PKCS12_bio, int(BIO *bp, PKCS12 *pkcs12));
+    MOCK_METHOD2(SSL_d2i_PKCS12_bio, PKCS12 *(BIO *bp, PKCS12 **pkcs12));
 };
 
 /**

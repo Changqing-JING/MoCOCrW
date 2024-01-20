@@ -85,3 +85,11 @@ add_test(
     COMMAND cert-validation
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test-certs"
 )
+
+add_executable(pkcs12-example pkcs12-example.cpp)
+target_link_libraries(pkcs12-example PUBLIC MoCOCrW::mococrw)
+add_test(
+    NAME pkcs12Example
+    COMMAND pkcs12-example
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/test-certs"
+)

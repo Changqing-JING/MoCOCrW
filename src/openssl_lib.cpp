@@ -417,6 +417,22 @@ X509_PUBKEY *OpenSSLLib::SSL_d2i_X509_PUBKEY(X509_PUBKEY **a,
 
 void OpenSSLLib::SSL_X509_PUBKEY_free(X509_PUBKEY *a) noexcept { X509_PUBKEY_free(a); }
 
+int OpenSSLLib::SSL_X509_digest(const X509 *data,
+                                const EVP_MD *type,
+                                unsigned char *md,
+                                unsigned int *len) noexcept
+{
+    return X509_digest(data, type, md, len);
+}
+
+int OpenSSLLib::SSL_X509_pubkey_digest(const X509 *data,
+                                       const EVP_MD *type,
+                                       unsigned char *md,
+                                       unsigned int *len) noexcept
+{
+    return X509_pubkey_digest(data, type, md, len);
+}
+
 /* ASN1 TIME */
 void OpenSSLLib::SSL_ASN1_TIME_free(ASN1_TIME *x) noexcept { ASN1_TIME_free(x); }
 
@@ -490,6 +506,23 @@ int OpenSSLLib::SSL_sk_X509_push(STACK_OF(X509) * stack, const X509 *crt) noexce
      * correctness is reestablished inside the function call via a cast to const.
      */
     return sk_X509_push(stack, const_cast<X509 *>(crt));
+}
+
+int OpenSSLLib::SSL_sk_X509_num(STACK_OF(X509) * stack) noexcept { return sk_X509_num(stack); }
+
+X509 *OpenSSLLib::SSL_sk_X509_value(STACK_OF(X509) * stack, int idx) noexcept
+{
+    return sk_X509_value(stack, idx);
+}
+
+X509 *OpenSSLLib::SSL_sk_X509_shift(STACK_OF(X509) * stack) noexcept
+{
+    return sk_X509_shift(stack);
+}
+
+void OpenSSLLib::SSL_sk_X509_pop_free(STACK_OF(X509) * stack) noexcept
+{
+    return sk_X509_pop_free(stack, X509_free);
 }
 
 void OpenSSLLib::SSL_sk_X509_free(STACK_OF(X509) * stack) noexcept { sk_X509_free(stack); }
@@ -1073,6 +1106,39 @@ int OpenSSLLib::SSL_EVP_PKEY_bits(EVP_PKEY *pkey) noexcept { return EVP_PKEY_bit
 void OpenSSLLib::SSL_OPENSSL_cleanse(void *ptr, size_t size) noexcept
 {
     OPENSSL_cleanse(ptr, size);
+}
+
+/* PKCS12 */
+PKCS12 *OpenSSLLib::SSL_PKCS12_create(const char *pass,
+                                      const char *name,
+                                      EVP_PKEY *pkey,
+                                      X509 *cert,
+                                      STACK_OF(X509) * ca,
+                                      int nid_key,
+                                      int nid_cert,
+                                      int iter,
+                                      int mac_iter,
+                                      int keytype) noexcept
+{
+    return PKCS12_create(pass, name, pkey, cert, ca, nid_key, nid_cert, iter, mac_iter, keytype);
+}
+
+void OpenSSLLib::SSL_PKCS12_free(PKCS12 *pkcs12) noexcept { PKCS12_free(pkcs12); }
+
+int OpenSSLLib::SSL_PKCS12_parse(
+        PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert, STACK_OF(X509) * *ca) noexcept
+{
+    return PKCS12_parse(p12, pass, pkey, cert, ca);
+}
+
+int OpenSSLLib::SSL_i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12) noexcept
+{
+    return i2d_PKCS12_bio(bp, pkcs12);
+}
+
+PKCS12 *OpenSSLLib::SSL_d2i_PKCS12_bio(BIO *bp, PKCS12 **pkcs12) noexcept
+{
+    return d2i_PKCS12_bio(bp, pkcs12);
 }
 }  // namespace lib
 }  // namespace openssl

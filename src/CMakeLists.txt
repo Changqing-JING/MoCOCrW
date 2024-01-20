@@ -33,6 +33,7 @@ set(LIBRARY_SOURCES
     symmetric_crypto.cpp
     symmetric_memory.cpp
     padding_mode.cpp
+    pkcs12.cpp
     util.cpp
     x509.cpp
 )
@@ -76,6 +77,7 @@ set(LIBRARY_PUBLIC_HEADERS
     mococrw/openssl_lib.h
     mococrw/openssl_wrap.h
     mococrw/padding_mode.h
+    mococrw/pkcs12.h
     mococrw/sign_params.h
     mococrw/subject_key_identifier.h
     mococrw/symmetric_crypto.h
