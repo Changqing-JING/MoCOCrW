@@ -127,6 +127,8 @@ public:
             , _nidCert(0)
             , _iter(0)
             , _macIter(0)
+            , _macSaltlen(PKCS12_SALT_LEN)
+            , _macDigestType(openssl::DigestTypes::NONE)
             , _keyType(0)
     {
     }
@@ -202,6 +204,28 @@ public:
     }
 
     /**
+     * Sets the MAC Salt length to use.
+     *
+     * @param macSaltlen The MAC salt length
+     */
+    Builder &setMacSaltLength(int macSaltlen)
+    {
+        _macSaltlen = macSaltlen;
+        return *this;
+    }
+
+    /**
+     * Sets the MAC message digest function to use.
+     *
+     * @param macDigestType The MAC message digest type
+     */
+    Builder &setMacIter(openssl::DigestTypes macDigestType)
+    {
+        _macDigestType = macDigestType;
+        return *this;
+    }
+
+    /**
      * Returns the type of key.
      *
      * @param keytype
@@ -230,6 +254,8 @@ protected:
     int _nidCert;
     int _iter;
     int _macIter;
+    int _macSaltlen;
+    openssl::DigestTypes _macDigestType;
     int _keyType;
 };
 
@@ -246,6 +272,7 @@ public:
         _nidCert = NID_pbe_WithSHA1And40BitRC2_CBC;
         _iter = PKCS12_DEFAULT_ITER;
         _macIter = 1;
+        _macDigestType = openssl::DigestTypes::SHA1;
         _keyType = 0;
     }
 };

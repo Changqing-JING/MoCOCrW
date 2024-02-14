@@ -444,6 +444,15 @@ public:
                                       int iter,
                                       int mac_iter,
                                       int keytype) = 0;
+
+    virtual int SSL_PKCS12_set_mac(PKCS12 *pkcs12,
+                                   const char *pass,
+                                   int passlen,
+                                   unsigned char *salt,
+                                   int saltlen,
+                                   int iter,
+                                   const EVP_MD *md_type) = 0;
+
     virtual void SSL_PKCS12_free(PKCS12 *pkcs12) = 0;
     virtual int SSL_PKCS12_parse(
             PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert, STACK_OF(X509) * *ca) = 0;
@@ -793,6 +802,15 @@ public:
                            int iter,
                            int mac_iter,
                            int keytype));
+
+    MOCK_METHOD7(SSL_PKCS12_set_mac,
+                 int(PKCS12 *pkcs12,
+                     const char *pass,
+                     int passlen,
+                     unsigned char *salt,
+                     int saltlen,
+                     int iter,
+                     const EVP_MD *md_type));
     MOCK_METHOD5(
             SSL_PKCS12_parse,
             int(PKCS12 *p12, const char *pass, EVP_PKEY **pkey, X509 **cert, STACK_OF(X509) * *ca));

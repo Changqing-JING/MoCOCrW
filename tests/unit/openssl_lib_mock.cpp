@@ -1299,6 +1299,19 @@ PKCS12 *OpenSSLLib::SSL_PKCS12_create(const char *pass,
     return OpenSSLLibMockManager::getMockInterface().SSL_PKCS12_create(
             pass, name, pkey, cert, ca, nid_key, nid_cert, iter, mac_iter, keytype);
 }
+
+int OpenSSLLib::SSL_PKCS12_set_mac(PKCS12 *pkcs12,
+                                   const char *pass,
+                                   int passlen,
+                                   unsigned char *salt,
+                                   int saltlen,
+                                   int iter,
+                                   const EVP_MD *md_type) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_PKCS12_set_mac(
+            pkcs12, pass, passlen, salt, saltlen, iter, md_type);
+}
+
 void OpenSSLLib::SSL_PKCS12_free(PKCS12 *pkcs12) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_PKCS12_free(pkcs12);

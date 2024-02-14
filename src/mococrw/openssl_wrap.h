@@ -1677,6 +1677,9 @@ SSL_PKCS12_Ptr _PKCS12_create(const std::string &pwd,
                               const int mac_iter,
                               const int keytype);
 
+void _PKCS12_set_mac(
+        PKCS12 *p12, const std::string &pwd, int saltlen, int iter, DigestTypes digestType);
+
 SSL_EVP_PKEY_Ptr _parsePrivateKeyFromPkcs12(PKCS12 *p12, const std::string &pwd);
 
 SSL_X509_Ptr _parseCertificateFromPkcs12(PKCS12 *p12, const std::string &pwd);

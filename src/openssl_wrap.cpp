@@ -1771,6 +1771,21 @@ SSL_PKCS12_Ptr _PKCS12_create(const std::string &pwd,
                                                       keytype)};
 }
 
+void _PKCS12_set_mac(
+        PKCS12 *p12, const std::string &pwd, int saltlen, int iter, DigestTypes digestType)
+{
+    const EVP_MD *type =
+            (digestType != DigestTypes::NONE) ? _getMDPtrFromDigestType(digestType) : nullptr;
+    OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_PKCS12_set_mac,
+                                       p12,
+                                       pwd.c_str(),
+                                       -1,
+                                       nullptr /*let OpenSSL generate a sensible salt*/,
+                                       saltlen,
+                                       iter,
+                                       type);
+}
+
 SSL_EVP_PKEY_Ptr _parsePrivateKeyFromPkcs12(PKCS12 *p12, const std::string &pwd)
 {
     EVP_PKEY *pkey = nullptr;

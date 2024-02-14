@@ -43,9 +43,14 @@ Pkcs12Container Pkcs12Container::Builder::build()
                                  _nidKey,
                                  _nidCert,
                                  _iter,
-                                 _macIter,
+                                 -1 /* Dont set MAC at this point so we have more control on its
+                                       config by calling _PKCS12_setup_mac */
+                                 ,
                                  _keyType);
 
+    if (_macIter != -1) {
+        _PKCS12_set_mac(pkcs12.get(), _pwd, _macSaltlen, _macIter, _macDigestType);
+    }
     return Pkcs12Container{_pwd, std::move(pkcs12)};
 }
 

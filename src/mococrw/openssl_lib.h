@@ -502,6 +502,14 @@ public:
                                      int mac_iter,
                                      int keytype) noexcept;
 
+    static int SSL_PKCS12_set_mac(PKCS12 *pkcs12,
+                                  const char *pass,
+                                  int passlen,
+                                  unsigned char *salt,
+                                  int saltlen,
+                                  int iter,
+                                  const EVP_MD *md_type) noexcept;
+
     static void SSL_PKCS12_free(PKCS12 *pkcs12) noexcept;
 
     static int SSL_PKCS12_parse(PKCS12 *p12,

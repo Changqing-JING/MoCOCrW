@@ -481,6 +481,24 @@ TEST_F(OpenSSLWrapperTest, testPkcs12Creation)
     EXPECT_NO_THROW(_PKCS12_create(pwd, name, ::testutils::somePkeyPtr(), cert, ca, 0, 0, 0, 0, 0));
 }
 
+TEST_F(OpenSSLWrapperTest, testPkcs12MacSetup)
+{
+    auto pwd = std::string("password");
+    auto saltLength = 40;
+    auto iter = 1;
+    EXPECT_CALL(_mock(),
+                SSL_PKCS12_set_mac(::testutils::somePkcs12Ptr(),
+                                   pwd.c_str(),
+                                   -1,
+                                   nullptr,
+                                   saltLength,
+                                   iter,
+                                   nullptr))
+            .WillOnce(Return(1));
+    EXPECT_NO_THROW(_PKCS12_set_mac(
+            ::testutils::somePkcs12Ptr(), pwd, saltLength, iter, DigestTypes::NONE));
+}
+
 TEST_F(OpenSSLWrapperTest, testPkcs12PrivateKeyParsing)
 {
     auto pwd = std::string("password");
