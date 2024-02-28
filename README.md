@@ -20,8 +20,8 @@ OpenSSL with the following goals in mind:
 This library is the work-in-progress result of the above ideas.
 
 ## Support
-We currently support OpenSSL 1.1.1 in the openssl1.1 branch. The support for
-OpenSSL 1.0.\<x\> (in the master and the openssl1.0.2 branch) has been dropped. These
+We currently only support OpenSSL 3.0 in the openssl3 branch. The support for
+OpenSSL 1.\<x\> (in the master and other branches, such as openssl1.0.2) has been dropped. These
 branches are **not** maintained anymore. The library is developed and tested mainly for
 x86_64 and aarch64 targets with Linux. However, there is no general limitation to that.
 
@@ -44,7 +44,7 @@ The library provides end-user interfaces for:
 
 The library contains CMake build scripts. As a dependency, your build environment should
 have development packages for the following libraries installed:
- * OpenSSL (1.1.1 branch)
+ * OpenSSL (3.0 branch)
  * Boost
  * gtest/gmock
 

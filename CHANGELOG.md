@@ -10,6 +10,27 @@ All notable changes to this project will be documented in this file.
 
 ## Added
 
+# Release 5.0.0
+
+## Changed
+
+* MoCOCrW transitions to using OpenSSL 3.0
+
+## Fixed
+
+* Fixes several compilation and deprecation issues arising from the use of OpenSSL 3.0.
+* Resolved a deprecation issue in our tests concerning the use of
+GTEST's `... TEST_CASE` API.
+* Refactored dockerfiles, leveraged by CI, so that docker multi-staged build
+is used to simplify the build process.
+
+## Added
+* Support for the setting of key attributes upon key generation inside HSM via an abstracted
+Builder API. Currently, Extraction property is supported.
+* API for creating and parsing PKCS#12 containers. Generation of legacy PKCS#12 containers
+is also supported.
+* Support for adding custom certificate extensions.
+
 # Release 4.5.1
 
 ## Changed
