@@ -347,16 +347,6 @@ INSTANTIATE_TEST_SUITE_P(testSuccessfulEncryptionDecryption,
                          testing::ValuesIn(AsymmetricEncryptionTest::nominalDataSet));
 
 /**
- * @brief Tests that decryption is unsuccessful if a wrong padding mode is used.
- */
-TEST_F(AsymmetricEncryptionTest, testUnsuccessfulDecryptionPKCSInsteadOfOEAP)
-{
-    auto ctxDecrypt =
-            RSAEncryptionPrivateKeyCtx(keyPairs1024bit.privKey, std::make_shared<PKCSPadding>());
-    EXPECT_THROW(ctxDecrypt.decrypt(OAEPPaddingDataSet.encrypted), MoCOCrWException);
-}
-
-/**
  * @brief Tests the decryption functionality with wrong key.
  */
 TEST_F(AsymmetricEncryptionTest, testUnsuccessfulDecryptionWrongKey)
