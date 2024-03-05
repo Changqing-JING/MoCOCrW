@@ -1819,6 +1819,7 @@ SSL_X509_Ptr _parseCertificateFromPkcs12(PKCS12 *p12, const std::string &pwd)
     X509 *cert = nullptr;
     OpensslCallIsPositive::callChecked(
             lib::OpenSSLLib::SSL_PKCS12_parse, p12, pwd.c_str(), &pkey, &cert, nullptr);
+    lib::OpenSSLLib::SSL_EVP_PKEY_free(pkey);
 
     if (cert == nullptr) {
         throw OpenSSLException("Cannot parse certificate from pkcs12 container. Not available");
@@ -1838,6 +1839,8 @@ SSL_STACK_OWNER_X509_Ptr _parseAdditionalCertsFromPkcs12(PKCS12 *p12, const std:
     auto additionalCerts = createOpenSSLObject<STACK_OF(X509)>();
     OpensslCallIsPositive::callChecked(
             lib::OpenSSLLib::SSL_PKCS12_parse, p12, pwd.c_str(), &pkey, &cert, &additionalCerts);
+    lib::OpenSSLLib::SSL_EVP_PKEY_free(pkey);
+    lib::OpenSSLLib::SSL_X509_free(cert);
 
     return SSL_STACK_OWNER_X509_Ptr{additionalCerts};
 }
