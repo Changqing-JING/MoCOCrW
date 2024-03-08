@@ -22,6 +22,7 @@
 
 #include "distinguished_name.h"
 #include "key.h"
+#include "sign_params.h"
 
 namespace mococrw
 {
@@ -45,6 +46,16 @@ public:
     explicit CertificateSigningRequest(const DistinguishedName &distinguishedName,
                                        const AsymmetricKeypair &key,
                                        const openssl::DigestTypes digestFunction);
+
+    /**
+     * Construct a new CertificateSigningRequest for the given distinguished name.
+     * The given public key is integrated in the CSR whereas the given private key
+     * is used to sign the CertificateSigningRequest. CertificateSigningParameters
+     * can be used to define digest function and extensions.
+     */
+    explicit CertificateSigningRequest(const DistinguishedName &distinguishedName,
+                                       const AsymmetricKeypair &key,
+                                       const CertificateSigningParameters &csp);
 
     /**
      * Return the PEM for this CSR as a string.

@@ -19,8 +19,11 @@
 #pragma once
 
 #include <chrono>
+#include <climits>
 #include <map>
+#include <memory>
 #include <type_traits>
+#include <set>
 
 #include "openssl_wrap.h"
 
@@ -53,10 +56,8 @@ public:
     {
         if (_notBefore.is_initialized()) {
             return _notBefore.get();
-        } else {
-            // Default start time is now (minus one second)
-            return Asn1Time::now() - std::chrono::seconds(1);
-        }
+        }  // Default start time is now (minus one second)
+        return Asn1Time::now() - std::chrono::seconds(1);
     }
 
     /**
@@ -82,8 +83,23 @@ public:
         if (extension == _extensions.end()) {
             throw MoCOCrWException("Extension type was not added to CertificateSigningParameters");
         }
-
         return extension->second;
+    }
+
+    /**
+     * Returns the vector of custom extensions
+    */
+    std::vector<openssl::SSL_X509_EXTENSION_SharedPtr> getCustomExtensions() const
+    {
+        return _customExtensions;
+    }
+
+    /**
+     * Checks whether the extension nid already exists in the current signing parameters
+    */
+    bool containsCustomExtensionWithNid(int nid) const
+    {
+        return _usedCustomExtensionNids.find(nid) != _usedCustomExtensionNids.end();
     }
 
     /**
@@ -119,6 +135,8 @@ private:
     // There is no more than one extension of the same type, so every extension type
     // is unique in the extension map.
     std::map<openssl::X509Extension_NID, std::shared_ptr<ExtensionBase> > _extensions;
+    std::vector<openssl::SSL_X509_EXTENSION_SharedPtr> _customExtensions;
+    std::set<int> _usedCustomExtensionNids;
 };
 
 class CertificateSigningParameters::Builder
@@ -160,6 +178,48 @@ public:
     {
         auto nid = extension->getNid();
         _sp._extensions[nid] = std::move(extension);
+        return *this;
+    }
+
+    /**
+     * Add a custom X509 extension by specifying its OID, criticality and ASN.1 data
+     * This method does not validate the ASN1 data for the custom extension!
+     *
+     * @param oid The numeric object id for the new extension
+     * @param critical A certificate-using system (eg. a CA) that does not recognize a critical
+     * extension will decline the certificate
+     * @param asn1EncodedBytes The data for the custom extension
+     * @throws MoCOCrWException when data is to large or extension with same OID was already added
+     * @warning This method is unsafe! The provided ASN1 data will not be checked for correctness by
+     * MoCOCrW, you have to do this yourself!
+     */
+    Builder &addCustomExtensionUnsafe(const std::string &oid,
+                                      const bool critical,
+                                      const std::vector<uint8_t> &asn1EncodedBytes)
+    {
+        auto asn1OctetString = openssl::createASN1OctetStringUnsafe(asn1EncodedBytes);
+
+        int nid = NID_undef;
+        try {
+            nid = openssl::_OBJ_create(oid);
+        } catch (const openssl::OpenSSLException) {
+            // If the oid has already been used to create an object, openssl will not be able to
+            // create a new one with the same oid. But the same oid might be used for different
+            // certificates, so we need to get the nid of the already existing openssl object.
+            nid = openssl::_OBJ_txt2nid(oid); 
+        }
+
+        if (_sp.containsCustomExtensionWithNid(nid)) {
+            throw MoCOCrWException(
+                "An extension with this nid was already added to these signing parameters. "
+                "A X509 certificate must not have two extensions with the same identifier!");
+        }
+
+        _sp._customExtensions.emplace_back(
+                openssl::_X509_EXTENSION_create_by_NID(nid, critical, asn1OctetString.get()));
+
+        _sp._usedCustomExtensionNids.insert(nid);
+
         return *this;
     }
 

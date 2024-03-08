@@ -215,6 +215,11 @@ using SSL_STACK_X509_Ptr =
                         SSLDeleter<STACK_OF(X509), lib::OpenSSLLib::SSL_sk_X509_free>>;
 using SSL_STACK_X509_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_STACK_X509_Ptr>;
 
+using SSL_STACK_X509_Extension_Ptr =
+       std::unique_ptr<STACK_OF(X509_EXTENSION),
+                        SSLDeleter<STACK_OF(X509_EXTENSION), lib::OpenSSLLib::SSL_sk_X509_EXTENSION_free>>;
+using SSL_STACK_X509_Extension_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_STACK_X509_Extension_Ptr>; 
+
 using SSL_STACK_OWNER_X509_Ptr =
         std::unique_ptr<STACK_OF(X509),
                         SSLDeleter<STACK_OF(X509), lib::OpenSSLLib::SSL_sk_X509_pop_free>>;
@@ -228,6 +233,12 @@ using SSL_ASN1_INTEGER_Ptr =
         std::unique_ptr<ASN1_INTEGER,
                         SSLDeleter<ASN1_INTEGER, lib::OpenSSLLib::SSL_ASN1_INTEGER_free>>;
 using SSL_ASN1_INTEGER_SharedPtr = utility::SharedPtrTypeFromUniquePtr<SSL_ASN1_INTEGER_Ptr>;
+
+using SSL_ASN1_OCTET_STRING_Ptr =
+        std::unique_ptr<ASN1_OCTET_STRING,
+                        SSLDeleter<ASN1_OCTET_STRING, lib::OpenSSLLib::SSL_ASN1_OCTET_STRING_free>>;
+using SSL_ASN1_OCTET_STRING_SharedPtr =
+        utility::SharedPtrTypeFromUniquePtr<SSL_ASN1_OCTET_STRING_Ptr>;
 
 using SSL_X509_EXTENSION_Ptr =
         std::unique_ptr<X509_EXTENSION,
@@ -1653,6 +1664,52 @@ int _EVP_PKEY_bits(EVP_PKEY *pkey);
  * Overwrite sensitive memory chunk
  */
 void _OPENSSL_cleanse(void *ptr, size_t size);
+
+/**
+ * Add a list of custom extensions to an X509 certificate
+*/
+void _X509_REQ_add_extensions(X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts);
+
+/**
+ * Add a new object to the OpenSSL internal table
+ * @return The nid of the created object
+ * @throw OpenSSLException if there was a failure while creating the object
+*/
+int _OBJ_create(const std::string &oid);
+
+/**
+ * Get the nid of an existing object by the corresponding text identifier
+ * @param s Can be the long name, a short name or the numerical representation (oid) of the object
+ * @return The nid of the corresponding object
+ * @throws OpenSSLException when the object could not be found
+*/
+int _OBJ_txt2nid(const std::string &s);
+
+/**
+ * Create a new ASN1_OCTET_STRING object
+*/
+SSL_ASN1_OCTET_STRING_Ptr _ASN1_OCTET_STRING_new();
+
+/**
+ * Set the value of an ASN1_OCTET_STRING from an array of bytes
+*/
+void _ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *octet_str, const unsigned char *data, int len);
+
+/**
+ * Create a new ASN1_OCTET_STRING with data
+ * @param asn1EncodedBytes The data the ASN1_OCTET_STRING should contain
+ * @warning This method is unsafe! The provided ASN1 data will not be checked for correctness by
+ * MoCOCrW, you have to do this yourself! 
+*/
+SSL_ASN1_OCTET_STRING_Ptr createASN1OctetStringUnsafe(const std::vector<uint8_t> &asn1EncodedBytes);
+
+/**
+ * Create a new X509 Extension by nid
+ * @param critical A certificate-using system (eg. a CA) will decline a certificate containing a
+ * critical extension that it does not know. Non-critical extensions will be ignored if they are
+ * unknown to the system.
+*/
+SSL_X509_EXTENSION_Ptr _X509_EXTENSION_create_by_NID(int nid, bool critical, ASN1_OCTET_STRING *data);
 
 /**
  * Construct OSSL_PARAM data structure with utf8 string as data type

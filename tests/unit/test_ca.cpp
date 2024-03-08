@@ -83,6 +83,12 @@ protected:
 
     std::unique_ptr<BasicConstraintsExtension> _exampleConstraints;
 
+    std::string _exampleCustomExtensionOid;
+
+    bool _exampleCustomExtensionCritical;
+
+    std::vector<uint8_t> _exampleCustomExtensionData;
+
     CertificateSigningParameters::Builder _signParamsBuilder;
 
     CertificateSigningParameters _signParams;
@@ -142,6 +148,10 @@ void CATest::SetUp()
     _exampleConstraints = std::make_unique<BasicConstraintsExtension>(false, 0);
     _exampleUsage = std::make_unique<KeyUsageExtension>(
             KeyUsageExtension::Builder{}.digitalSignature().keyCertSign().cRLSign().build());
+
+    _exampleCustomExtensionOid = "1.2.3.4.5.1";
+    _exampleCustomExtensionCritical = true;
+    _exampleCustomExtensionData = {0x04, 0x04, 0x02, 0x0e, 0xff};
 
     BasicConstraintsExtension caConstraint{true, 1};
     auto notBeforeTime = Asn1Time::now() - std::chrono::seconds{1};
@@ -228,6 +238,47 @@ TEST_F(CATest, testBuildSignParamsWithExtensions)
                             .addExtension(*_exampleConstraints)
                             .addExtension(*_exampleUsage)
                             .build());
+
+    // Custom extension unsafe
+    EXPECT_NO_THROW(CertificateSigningParameters::Builder{}
+                            .certificateValidity(Asn1Time::Seconds(120))
+                            .notBeforeAsn1(Asn1Time::now() - std::chrono::seconds{1})
+                            .digestType(openssl::DigestTypes::SHA256)
+                            .addCustomExtensionUnsafe(
+                                _exampleCustomExtensionOid,
+                                _exampleCustomExtensionCritical,
+                                _exampleCustomExtensionData)
+                            .build());
+
+    // Standard and custom extensions
+    EXPECT_NO_THROW(CertificateSigningParameters::Builder{}
+                            .certificateValidity(Asn1Time::Seconds(120))
+                            .notBeforeAsn1(Asn1Time::now() - std::chrono::seconds{1})
+                            .digestType(openssl::DigestTypes::SHA256)
+                            .addExtension(*_exampleConstraints)
+                            .addExtension(*_exampleUsage)
+                            .addCustomExtensionUnsafe(
+                                _exampleCustomExtensionOid,
+                                _exampleCustomExtensionCritical,
+                                _exampleCustomExtensionData)
+                            .build());
+}
+
+TEST_F(CATest, testCannotBuildSignParamsWithDuplicateCustomExtension)
+{
+    EXPECT_THROW(CertificateSigningParameters::Builder{}
+        .certificateValidity(Asn1Time::Seconds(120))
+        .notBeforeAsn1(Asn1Time::now() - std::chrono::seconds{1})
+        .digestType(openssl::DigestTypes::SHA256)
+        .addCustomExtensionUnsafe(
+                _exampleCustomExtensionOid,
+                _exampleCustomExtensionCritical,
+                _exampleCustomExtensionData)
+        .addCustomExtensionUnsafe(
+                _exampleCustomExtensionOid,
+                _exampleCustomExtensionCritical,
+                _exampleCustomExtensionData)
+        .build(), MoCOCrWException);
 }
 
 TEST_F(CATest, testRequestNotExistingExtension)
@@ -321,6 +372,28 @@ TEST_P(CATest, testCanSignCACertificates)
     csr = CertificateSigningRequest{*_secondaryCertDetails, AsymmetricKeypair::generateRSA()};
     X509Certificate secondaryCert = newCA.signCSR(csr);
     ASSERT_NO_THROW(secondaryCert.verify({data.rootCert}, {cert}));
+}
+
+TEST_P(CATest, testCanSignCSRWithCustomExtensions)
+{
+    auto input = GetParam();
+    auto data = getRootCertAndCa(input.rootKey, _caSignParams);
+
+    auto csp = CertificateSigningParameters::Builder{}
+        .certificateValidity(Asn1Time::Seconds(120))
+        .notBeforeAsn1(Asn1Time::now() - std::chrono::seconds{1})
+        .digestType(openssl::DigestTypes::SHA256)
+        .addExtension(*_exampleConstraints)
+        .addExtension(*_exampleUsage)
+        .addCustomExtensionUnsafe(
+                _exampleCustomExtensionOid,
+                _exampleCustomExtensionCritical,
+                _exampleCustomExtensionData)
+        .build();
+
+    CertificateSigningRequest csr{*_certDetails, input.intermediateKey, csp};
+    X509Certificate cert = data.ca.signCSR(csr);
+    ASSERT_NO_THROW(cert.verify({data.rootCert}, {}));
 }
 
 TEST_P(CATest, testSignedNoCACertificatesCantSignOtherCertificates)

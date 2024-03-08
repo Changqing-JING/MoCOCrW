@@ -35,6 +35,12 @@ namespace openssl
 class OpenSSLLibMockInterface
 {
 public:
+    virtual X509_EXTENSION *SSL_X509_EXTENSION_create_by_NID(X509_EXTENSION **ex, int nid, int crit, ASN1_OCTET_STRING *data) = 0;
+    virtual int SSL_ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *str, const unsigned char *data, int len) = 0;
+    virtual ASN1_OCTET_STRING *SSL_ASN1_OCTET_STRING_new() = 0;
+    virtual int SSL_OBJ_txt2nid(const char *s) = 0;
+    virtual int SSL_OBJ_create(const char *oid, const char *sn, const char *ln) = 0;
+    virtual int SSL_X509_REQ_add_extensions(X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts) = 0;
     virtual OSSL_PARAM SSL_OSSL_PARAM_construct_utf8_string(const char *key,
                                                             char *buf,
                                                             size_t bsize) = 0;
@@ -174,6 +180,7 @@ public:
     virtual int SSL_BN_bn2bin(const BIGNUM *a, unsigned char *to) = 0;
     virtual ASN1_INTEGER *SSL_ASN1_INTEGER_new() = 0;
     virtual void SSL_ASN1_INTEGER_free(ASN1_INTEGER *a) = 0;
+    virtual void SSL_ASN1_OCTET_STRING_free(ASN1_OCTET_STRING *a) = 0;
     virtual void *SSL_OPENSSL_malloc(int num) = 0;
     virtual void SSL_OPENSSL_free(void *addr) = 0;
     virtual char *SSL_BN_bn2dec(const BIGNUM *a) = 0;
@@ -385,6 +392,11 @@ public:
     virtual void SSL_sk_X509_pop_free(STACK_OF(X509) * stack) = 0;
     virtual void SSL_sk_X509_free(STACK_OF(X509) * stack) = 0;
 
+    /* stack of X509 Extension */
+    virtual STACK_OF(X509_EXTENSION) * SSL_sk_X509_Extension_new_null() = 0;
+    virtual int SSL_sk_X509_EXTENSION_push(STACK_OF(X509_EXTENSION) * stack, const X509_EXTENSION *ext) = 0;
+    virtual void SSL_sk_X509_EXTENSION_free(STACK_OF(X509_EXTENSION) * stack) = 0;
+
     /* Signatures */
     virtual int SSL_EVP_PKEY_sign(EVP_PKEY_CTX *ctx,
                                   unsigned char *sig,
@@ -467,6 +479,12 @@ public:
 class OpenSSLLibMock : public OpenSSLLibMockInterface
 {
 public:
+    MOCK_METHOD4(SSL_X509_EXTENSION_create_by_NID, X509_EXTENSION *(X509_EXTENSION **, int, int, ASN1_OCTET_STRING *));
+    MOCK_METHOD3(SSL_ASN1_OCTET_STRING_set, int(ASN1_OCTET_STRING *, const unsigned char *, int));
+    MOCK_METHOD0(SSL_ASN1_OCTET_STRING_new, ASN1_OCTET_STRING *());
+    MOCK_METHOD1(SSL_OBJ_txt2nid, int(const char*));
+    MOCK_METHOD3(SSL_OBJ_create, int(const char*, const char*, const char*));
+    MOCK_METHOD2(SSL_X509_REQ_add_extensions, int(X509_REQ*, const STACK_OF(X509_EXTENSION)*));
     MOCK_METHOD3(SSL_OSSL_PARAM_construct_utf8_string, OSSL_PARAM(const char *, char *, size_t));
     MOCK_METHOD0(SSL_OSSL_PARAM_construct_end, OSSL_PARAM());
     MOCK_METHOD2(SSL_OPENSSL_cleanse, void(void *, size_t));
@@ -571,6 +589,7 @@ public:
     MOCK_METHOD2(SSL_BN_bn2bin, int(const BIGNUM *, unsigned char *));
     MOCK_METHOD0(SSL_ASN1_INTEGER_new, ASN1_INTEGER *());
     MOCK_METHOD1(SSL_ASN1_INTEGER_free, void(ASN1_INTEGER *));
+    MOCK_METHOD1(SSL_ASN1_OCTET_STRING_free, void(ASN1_OCTET_STRING *));
     MOCK_METHOD1(SSL_OPENSSL_malloc, void *(int));
     MOCK_METHOD1(SSL_OPENSSL_free, void(void *));
     MOCK_METHOD1(SSL_BN_bn2dec, char *(const BIGNUM *));
@@ -737,6 +756,10 @@ public:
     MOCK_METHOD1(SSL_sk_X509_shift, X509 *(STACK_OF(X509) *));
     MOCK_METHOD1(SSL_sk_X509_pop_free, void(STACK_OF(X509) *));
     MOCK_METHOD1(SSL_sk_X509_free, void(STACK_OF(X509) *));
+
+    MOCK_METHOD0(SSL_sk_X509_Extension_new_null, STACK_OF(X509_EXTENSION) * ());
+    MOCK_METHOD2(SSL_sk_X509_EXTENSION_push, int(STACK_OF(X509_EXTENSION) *, const X509_EXTENSION *));
+    MOCK_METHOD1(SSL_sk_X509_EXTENSION_free, void(STACK_OF(X509_EXTENSION) *));
 
     MOCK_METHOD3(SSL_X509_NAME_get_index_by_NID, int(X509_NAME *, int, int));
     MOCK_METHOD2(SSL_X509_NAME_get_entry, X509_NAME_ENTRY *(X509_NAME *, int));

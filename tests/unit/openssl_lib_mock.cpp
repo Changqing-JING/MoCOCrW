@@ -618,6 +618,21 @@ void OpenSSLLib::SSL_sk_X509_free(STACK_OF(X509) * stack) noexcept
     return OpenSSLLibMockManager::getMockInterface().SSL_sk_X509_free(stack);
 }
 
+/* stack of X509_Extension */
+STACK_OF(X509_EXTENSION) * OpenSSLLib::SSL_sk_X509_Extension_new_null() noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_sk_X509_Extension_new_null();
+}
+
+int OpenSSLLib::SSL_sk_X509_EXTENSION_push(STACK_OF(X509_EXTENSION) * stack, const X509_EXTENSION *crt) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_sk_X509_EXTENSION_push(stack, crt);
+}
+void OpenSSLLib::SSL_sk_X509_EXTENSION_free(STACK_OF(X509_EXTENSION) * stack) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_sk_X509_EXTENSION_free(stack);
+}
+
 int OpenSSLLib::SSL_X509_NAME_get_index_by_NID(X509_NAME *name, int nid, int lastpos) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_X509_NAME_get_index_by_NID(
@@ -736,6 +751,10 @@ void OpenSSLLib::SSL_OPENSSL_free(void *addr) noexcept
 void OpenSSLLib::SSL_ASN1_INTEGER_free(ASN1_INTEGER *a) noexcept
 {
     OpenSSLLibMockManager::getMockInterface().SSL_ASN1_INTEGER_free(a);
+}
+void OpenSSLLib::SSL_ASN1_OCTET_STRING_free(ASN1_OCTET_STRING *a) noexcept
+{
+    OpenSSLLibMockManager::getMockInterface().SSL_ASN1_OCTET_STRING_free(a);
 }
 ASN1_INTEGER *OpenSSLLib::SSL_ASN1_INTEGER_new() noexcept
 {
@@ -1328,6 +1347,31 @@ int OpenSSLLib::SSL_i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12) noexcept
 PKCS12 *OpenSSLLib::SSL_d2i_PKCS12_bio(BIO *bp, PKCS12 **pkcs12) noexcept
 {
     return OpenSSLLibMockManager::getMockInterface().SSL_d2i_PKCS12_bio(bp, pkcs12);
+}
+int OpenSSLLib::SSL_X509_REQ_add_extensions(
+    X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_X509_REQ_add_extensions(req, exts);
+}
+int OpenSSLLib::SSL_OBJ_create(const char *oid, const char *sn, const char *ln) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_OBJ_create(oid, sn, ln);
+}
+int OpenSSLLib::SSL_OBJ_txt2nid(const char *s) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_OBJ_txt2nid(s);
+}
+ASN1_OCTET_STRING *OpenSSLLib::SSL_ASN1_OCTET_STRING_new() noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_ASN1_OCTET_STRING_new();
+}
+int OpenSSLLib::SSL_ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *str, const unsigned char *data, int len) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_ASN1_OCTET_STRING_set(str, data, len);
+}
+X509_EXTENSION *OpenSSLLib::SSL_X509_EXTENSION_create_by_NID(X509_EXTENSION **ex, int nid, int crit, ASN1_OCTET_STRING *data) noexcept
+{
+    return OpenSSLLibMockManager::getMockInterface().SSL_X509_EXTENSION_create_by_NID(ex, nid, crit, data);
 }
 }  // namespace lib
 }  // namespace openssl

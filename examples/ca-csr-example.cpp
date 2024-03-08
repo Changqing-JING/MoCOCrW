@@ -195,8 +195,19 @@ CertificateSigningRequest createClientCsr(const AsymmetricKeypair &clientKey)
                                      .commonName("Client certificate")
                                      .build();
 
+    /* Create new signing parameters which contain two custom extensions with some random data */
+    auto csp = CertificateSigningParameters::Builder{}
+        .digestType(digestType)
+        .addCustomExtensionUnsafe(
+            "1.2.3.4.5.1", false, {0x04, 0x04, 0x02, 0x0e, 0xff}) // OCTETSTRING 020eff
+        .addCustomExtensionUnsafe(
+            "1.2.3.4.5.2", true, {0x31, 0x04, 0x04, 0x02, 0x0e, 0xff}) // SET OCTETSTRING 0eff
+        .addExtension(
+                KeyUsageExtension::Builder{}.keyAgreement().keyEncipherment().build())
+        .build();
+
     /* Create the CSR. This CSR is then send to the CA for signing (here: signClientCsr()) */
-    return CertificateSigningRequest(clientCertDetails, clientKey, digestType);
+    return CertificateSigningRequest(clientCertDetails, clientKey, csp);
 }
 
 X509Certificate signClientCsr(const CertificateSigningRequest &clientCsr,

@@ -672,7 +672,7 @@ X509_STORE *createOpenSSLObject<X509_STORE>()
 }
 
 template <>
-        STACK_OF(X509_CRL) * createOpenSSLObject<STACK_OF(X509_CRL)>()
+STACK_OF(X509_CRL) * createOpenSSLObject<STACK_OF(X509_CRL)>()
 {
     return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_sk_X509_CRL_new_null);
 }
@@ -684,9 +684,15 @@ X509_STORE_CTX *createOpenSSLObject<X509_STORE_CTX>()
 }
 
 template <>
-        STACK_OF(X509) * createOpenSSLObject<STACK_OF(X509)>()
+STACK_OF(X509) * createOpenSSLObject<STACK_OF(X509)>()
 {
     return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_sk_X509_new_null);
+}
+
+template <>
+STACK_OF(X509_EXTENSION) * createOpenSSLObject<STACK_OF(X509_EXTENSION)>()
+{
+    return OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_sk_X509_Extension_new_null);
 }
 
 template <>
@@ -717,6 +723,13 @@ template <>
 void addObjectToStack<STACK_OF(X509), X509>(STACK_OF(X509) * stack, const X509 *obj)
 {
     OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_sk_X509_push, stack, obj);
+}
+
+template <>
+void addObjectToStack<STACK_OF(X509_EXTENSION), X509_EXTENSION>(STACK_OF(X509_EXTENSION) * stack,
+                                                                const X509_EXTENSION *obj)
+{
+    OpensslCallIsPositive::callChecked(lib::OpenSSLLib::SSL_sk_X509_EXTENSION_push, stack, obj);
 }
 
 template <>
@@ -1838,6 +1851,63 @@ SSL_PKCS12_Ptr _d2i_PKCS12_bio(BIO *bp)
 void _i2d_PKCS12_bio(BIO *bp, PKCS12 *pkcs12)
 {
     OpensslCallIsNonNegative::callChecked(lib::OpenSSLLib::SSL_i2d_PKCS12_bio, bp, pkcs12);
+}
+void _X509_REQ_add_extensions(X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts)
+{
+    OpensslCallIsOne::callChecked(lib::OpenSSLLib::SSL_X509_REQ_add_extensions, req, exts);
+}
+
+int _OBJ_create(const std::string &oid)
+{
+    // Throw exception when returned nid (which should always be positive) matches NID_undef(=0)
+    return OpensslCallIsPositive::callChecked(
+            lib::OpenSSLLib::SSL_OBJ_create, oid.c_str(), nullptr, nullptr);
+}
+
+int _OBJ_txt2nid(const std::string &s)
+{
+    return OpensslCallIsPositive::callChecked(
+        lib::OpenSSLLib::SSL_OBJ_txt2nid, s.c_str());
+}
+
+SSL_ASN1_OCTET_STRING_Ptr _ASN1_OCTET_STRING_new()
+{
+    return SSL_ASN1_OCTET_STRING_Ptr{
+            OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_ASN1_OCTET_STRING_new)};
+}
+
+void _ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *octet_str,
+                            const unsigned char *data,
+                            int len)
+{
+    OpensslCallIsOne::callChecked(
+            lib::OpenSSLLib::SSL_ASN1_OCTET_STRING_set, octet_str, data, len);
+}
+
+SSL_ASN1_OCTET_STRING_Ptr createASN1OctetStringUnsafe(const std::vector<uint8_t> &asn1EncodedBytes)
+{
+        if (asn1EncodedBytes.size() > INT_MAX) {
+            throw MoCOCrWException("Size of asn1EncodedBytes is too large");
+        }
+
+        SSL_ASN1_OCTET_STRING_Ptr asn1OctetString = _ASN1_OCTET_STRING_new();
+        _ASN1_OCTET_STRING_set(asn1OctetString.get(),
+                               asn1EncodedBytes.data(),
+                               static_cast<int>(asn1EncodedBytes.size()));
+
+        return asn1OctetString;
+}
+
+SSL_X509_EXTENSION_Ptr _X509_EXTENSION_create_by_NID(int nid,
+                                                     bool critical,
+                                                     ASN1_OCTET_STRING *data)
+{
+    return SSL_X509_EXTENSION_Ptr{
+            OpensslCallPtr::callChecked(lib::OpenSSLLib::SSL_X509_EXTENSION_create_by_NID,
+                                        nullptr,
+                                        nid,
+                                        critical ? 1 : 0,
+                                        data)};
 }
 }  // namespace openssl
 }  // namespace mococrw

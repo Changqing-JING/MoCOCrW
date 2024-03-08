@@ -28,6 +28,22 @@ using namespace openssl;
 CertificateSigningRequest::CertificateSigningRequest(const DistinguishedName &dn,
                                                      const AsymmetricKeypair &keypair,
                                                      const openssl::DigestTypes digestFunction)
+        : CertificateSigningRequest(
+                  dn,
+                  keypair,
+                  CertificateSigningParameters::Builder{}.digestType(digestFunction).build())
+{
+}
+
+CertificateSigningRequest::CertificateSigningRequest(const DistinguishedName &dn,
+                                                     const AsymmetricKeypair &keypair)
+        : CertificateSigningRequest{dn, keypair, DigestTypes::SHA512}
+{
+}
+
+CertificateSigningRequest::CertificateSigningRequest(const DistinguishedName &dn,
+                                                     const AsymmetricKeypair &keypair,
+                                                     const CertificateSigningParameters &csp)
         : _req{openssl::_X509_REQ_new()}
 {
     /* setup x509 version number */
@@ -39,21 +55,33 @@ CertificateSigningRequest::CertificateSigningRequest(const DistinguishedName &dn
 
     _X509_REQ_set_pubkey(_req.get(), const_cast<EVP_PKEY *>(keypair.internal()));
 
+    auto customExtensions = csp.getCustomExtensions();
+    auto extStack = openssl::createManagedOpenSSLObject<SSL_STACK_X509_Extension_Ptr>();
+    for (const auto &ext : customExtensions) {
+        openssl::addObjectToStack(extStack.get(), ext.get());
+    }
+
+    // We have to store the extension pointers in an vector outside of the for loop, because
+    // addObjectToStack does not copy the extension. Otherwise openssl would use freed memory when
+    // adding the extension stack to the csr outside of the for loop.
+    std::vector<SSL_X509_EXTENSION_Ptr> baseExtensions;
+    for (auto &it : csp.extensionMap()) {
+        auto builtExtension = it.second.get()->buildExtension(nullptr);
+        openssl::addObjectToStack(extStack.get(), builtExtension.get());
+        baseExtensions.emplace_back(std::move(builtExtension));
+    }
+
+    _X509_REQ_add_extensions(internal(), extStack.get());
+
     auto mctx = _EVP_MD_CTX_create();
 
-    auto digestType = digestFunction;
+    auto digestType = csp.digestType();
     if (keypair.getType() == AsymmetricKey::KeyTypes::ECC_ED) {
         digestType = DigestTypes::NONE;
     }
     _EVP_DigestSignInit(mctx.get(), digestType, const_cast<EVP_PKEY *>(keypair.internal()));
 
     _X509_REQ_sign_ctx(_req.get(), mctx.get());
-}
-
-CertificateSigningRequest::CertificateSigningRequest(const DistinguishedName &dn,
-                                                     const AsymmetricKeypair &keypair)
-        : CertificateSigningRequest{dn, keypair, DigestTypes::SHA256}
-{
 }
 
 AsymmetricPublicKey CertificateSigningRequest::getPublicKey() const

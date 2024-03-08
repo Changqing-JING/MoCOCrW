@@ -61,6 +61,12 @@ namespace lib
 class OpenSSLLib
 {
 public:
+    static X509_EXTENSION *SSL_X509_EXTENSION_create_by_NID(X509_EXTENSION **ex, int nid, int crit, ASN1_OCTET_STRING *data) noexcept;
+    static int SSL_ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *str, const unsigned char *data, int len) noexcept;
+    static ASN1_OCTET_STRING *SSL_ASN1_OCTET_STRING_new() noexcept;
+    static int SSL_OBJ_txt2nid(const char *s) noexcept;
+    static int SSL_OBJ_create(const char *oid, const char *sn, const char *ln) noexcept;
+    static int SSL_X509_REQ_add_extensions(X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts) noexcept;
     static OSSL_PARAM SSL_OSSL_PARAM_construct_utf8_string(const char *key,
                                                            char *buf,
                                                            size_t bsize) noexcept;
@@ -161,6 +167,7 @@ public:
     static int SSL_BN_bn2bin(const BIGNUM *a, unsigned char *to) noexcept;
     static ASN1_INTEGER *SSL_ASN1_INTEGER_new() noexcept;
     static void SSL_ASN1_INTEGER_free(ASN1_INTEGER *a) noexcept;
+    static void SSL_ASN1_OCTET_STRING_free(ASN1_OCTET_STRING *a) noexcept;
     static void *SSL_OPENSSL_malloc(int num) noexcept;
     static void SSL_OPENSSL_free(void *addr) noexcept;
     static char *SSL_BN_bn2dec(const BIGNUM *a) noexcept;
@@ -372,6 +379,11 @@ public:
     static X509 *SSL_sk_X509_shift(STACK_OF(X509) * stack) noexcept;
     static void SSL_sk_X509_pop_free(STACK_OF(X509) * stack) noexcept;
     static void SSL_sk_X509_free(STACK_OF(X509) * stack) noexcept;
+
+    /* stack of X509 Extension */
+    static STACK_OF(X509_EXTENSION) * SSL_sk_X509_Extension_new_null() noexcept;
+    static int SSL_sk_X509_EXTENSION_push(STACK_OF(X509_EXTENSION) * stack, const X509_EXTENSION *ext) noexcept;
+    static void SSL_sk_X509_EXTENSION_free(STACK_OF(X509_EXTENSION) * stack) noexcept;
 
     /* EVP_MD */
     static EVP_MD_CTX *SSL_EVP_MD_CTX_create() noexcept;

@@ -527,6 +527,21 @@ void OpenSSLLib::SSL_sk_X509_pop_free(STACK_OF(X509) * stack) noexcept
 
 void OpenSSLLib::SSL_sk_X509_free(STACK_OF(X509) * stack) noexcept { sk_X509_free(stack); }
 
+/* stack of X509 Extension */
+STACK_OF(X509_EXTENSION) * OpenSSLLib::SSL_sk_X509_Extension_new_null() noexcept {
+    return sk_X509_EXTENSION_new_null();
+}
+
+int OpenSSLLib::SSL_sk_X509_EXTENSION_push(STACK_OF(X509_EXTENSION) * stack, const X509_EXTENSION *ext) noexcept
+{
+    return sk_X509_EXTENSION_push(stack, const_cast<X509_EXTENSION *>(ext));
+}
+
+void OpenSSLLib::SSL_sk_X509_EXTENSION_free(STACK_OF(X509_EXTENSION) * stack) noexcept
+{
+    sk_X509_EXTENSION_free(stack);
+}
+
 BIO *OpenSSLLib::SSL_BIO_new_file(const char *filename, const char *mode) noexcept
 {
     return BIO_new_file(filename, mode);
@@ -610,6 +625,11 @@ void *OpenSSLLib::SSL_OPENSSL_malloc(int num) noexcept { return OPENSSL_malloc(n
 void OpenSSLLib::SSL_OPENSSL_free(void *addr) noexcept { OPENSSL_free(addr); }
 
 void OpenSSLLib::SSL_ASN1_INTEGER_free(ASN1_INTEGER *a) noexcept { ASN1_INTEGER_free(a); }
+
+void OpenSSLLib::SSL_ASN1_OCTET_STRING_free(ASN1_OCTET_STRING *a) noexcept
+{
+    ASN1_OCTET_STRING_free(a);
+}
 
 ASN1_INTEGER *OpenSSLLib::SSL_ASN1_INTEGER_new() noexcept { return ASN1_INTEGER_new(); }
 
@@ -1151,6 +1171,42 @@ PKCS12 *OpenSSLLib::SSL_d2i_PKCS12_bio(BIO *bp, PKCS12 **pkcs12) noexcept
 {
     return d2i_PKCS12_bio(bp, pkcs12);
 }
+
+/* Custom Extensions */
+int OpenSSLLib::SSL_X509_REQ_add_extensions(
+    X509_REQ *req, const STACK_OF(X509_EXTENSION) *exts) noexcept
+{
+    return X509_REQ_add_extensions(req, exts);
+}
+
+int OpenSSLLib::SSL_OBJ_create(const char *oid, const char *sn, const char *ln) noexcept
+{
+    return OBJ_create(oid, sn, ln);
+}
+
+int OpenSSLLib::SSL_OBJ_txt2nid(const char *s) noexcept
+{
+    return OBJ_txt2nid(s);
+}
+
+ASN1_OCTET_STRING *OpenSSLLib::SSL_ASN1_OCTET_STRING_new() noexcept
+{
+    return ASN1_OCTET_STRING_new();
+}
+
+int OpenSSLLib::SSL_ASN1_OCTET_STRING_set(ASN1_OCTET_STRING *str, const unsigned char *data, int len) noexcept
+{
+    return ASN1_OCTET_STRING_set(str, data, len);
+}
+
+X509_EXTENSION *OpenSSLLib::SSL_X509_EXTENSION_create_by_NID(X509_EXTENSION **ex,
+                                                             int nid,
+                                                             int crit,
+                                                             ASN1_OCTET_STRING *data) noexcept
+{
+    return X509_EXTENSION_create_by_NID(ex, nid, crit, data);
+}
+
 }  // namespace lib
 }  // namespace openssl
 }  // namespace mococrw
