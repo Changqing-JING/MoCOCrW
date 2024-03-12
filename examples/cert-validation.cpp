@@ -26,7 +26,6 @@ int main()
 {
     X509Certificate rootCA = X509Certificate::fromPEMFile("root3.pem");
     X509Certificate intermediateCA = X509Certificate::fromPEMFile("root3.int1.pem");
-    X509Certificate intermediateCA_1 = X509Certificate::fromPEMFile("root3.int1.int11.pem");
 
     CertificateRevocationList rootCRL = //NOLINT: cland-tidy thinks this is not used, but it is
             CertificateRevocationList::fromPEMFile("root3.crl.pem");
